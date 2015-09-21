@@ -92,6 +92,10 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
         package_dict = super(MultilangHarvester, self).get_package_dict(iso_values, harvest_object)        
         
         if iso_values["abstract-text"] and iso_values["title-text"]:
+            harvester_config = self.source_config.get('ckan_locales_mapping', {})
+            if harvester_config:
+                self._ckan_locales_mapping = harvester_config
+                log.info('::::: ckan_locales_mapping entry found in harvester configuration :::::')
 
             log.debug('::::: Collecting localised data from the metadata abstract :::::')
             localised_abstracts = []
