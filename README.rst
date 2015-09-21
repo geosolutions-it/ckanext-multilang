@@ -43,7 +43,7 @@ To install ckanext-multilang:
 
 6. paster --plugin=ckanext-multilang multilangdb initdb --config=/etc/ckan/default/production.ini
 
-7. Add ``multilang`` to the ``ckan.plugins`` setting in your CKAN
+7. Add ``multilang`` and ``multilang_harvester`` to the ``ckan.plugins`` setting in your CKAN
    config file (by default the config file is located at
    ``/etc/ckan/default/production.ini``).
 
