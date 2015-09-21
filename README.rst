@@ -22,6 +22,8 @@ Requirements
 ------------
 
 The ckanext-multilang extension works with CKAN 2.4 or later.
+The ckanext-multilang extension requires the `ckanext-spatial plugin 
+<https://github.com/geosolutions-it/ckanext-spatial/tree/stable_official_hook>`_ installed on CKAN (see the WIKI for more details about that).
 
 ------------------------
 Development Installation
