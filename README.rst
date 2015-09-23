@@ -48,6 +48,16 @@ To install ckanext-multilang:
 7. Add ``multilang`` and ``multilang_harvester`` to the ``ckan.plugins`` setting in your CKAN
    config file (by default the config file is located at
    ``/etc/ckan/default/production.ini``).
+   
+8. Update the Solr schema.xml file used by CKAN introducing the following elements:
+   
+   Inside the 'fields' Tag:
+      <dynamicField name="multilang_localized_*" type="text" indexed="true" stored="true" multiValued="false"/>
+   
+   A new 'copyField' to append:
+      <copyField source="multilang_localized_*" dest="text"/>
 
-4. Restart CKAN.
+9. Restart Solr.
+
+10. Restart CKAN.
 
