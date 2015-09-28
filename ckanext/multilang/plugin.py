@@ -50,7 +50,9 @@ class MultilangPlugin(plugins.SingletonPlugin):
         map.connect('/organization/new', controller='ckanext.multilang.controllers.organization:MultilangOrganizationController', action='new')
         map.connect('/organization/{id}', controller='ckanext.multilang.controllers.organization:MultilangOrganizationController', action='read')
         map.connect('/organization/edit/{id}', controller='ckanext.multilang.controllers.organization:MultilangOrganizationController', action='edit')   
-        map.connect('/organization/about/{id}', controller='ckanext.multilang.controllers.organization:MultilangOrganizationController', action='about')     
+        map.connect('/organization/about/{id}', controller='ckanext.multilang.controllers.organization:MultilangOrganizationController', action='about')   
+
+        map.connect('/user/{id:.*}', controller='ckanext.multilang.controllers.user:MultilangUserController', action='read') 
 
         return map
 
