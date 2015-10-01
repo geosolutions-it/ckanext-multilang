@@ -1101,7 +1101,7 @@ class MultilangPackageController(PackageController):
                     get_action('resource_update')(context, data)
 
                     #  MULTILANG - Updating existing record in multilang table
-                    q_results = model.Session.query(model.Resource).filter(model.Resource.id == resource_id, ResourceMultilang.lang == lang).all()
+                    q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource_id, ResourceMultilang.lang == lang).all()
                     if q_results:
                         for result in q_results:
                             result.text = data.get(result.field)

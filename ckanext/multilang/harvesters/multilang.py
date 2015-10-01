@@ -4,11 +4,10 @@ import json
 import logging
 import ckan.lib.search as search
 
-from ckan import model
+from ckan.lib.base import model
 from ckan.model import Session
-from ckan.model import meta
 
-from ckanext.multilang.model import PackageMultilang
+from ckanext.multilang.model import PackageMultilang, GroupMultilang
 
 from ckan.plugins.core import SingletonPlugin
 
@@ -17,6 +16,7 @@ from ckanext.spatial.harvesters.csw import CSWHarvester
 
 from ckanext.spatial.model import ISODocument
 from ckanext.spatial.model import ISOElement
+from ckanext.spatial.model import ISOResponsibleParty
 
 from ckan.logic import ValidationError, NotFound, get_action
 
@@ -63,6 +63,27 @@ ISODocument.elements.append(
         search_paths=[
             "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:abstract/gmd:PT_FreeText/gmd:textGroup",
             "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:abstract/gmd:PT_FreeText/gmd:textGroup"
+        ],
+        multiplicity="1..*",
+    )
+)
+
+ISOResponsibleParty.elements.append(
+    ISOTextGroup(
+        name="organisation-name-localized",
+        search_paths=[
+            "gmd:organisationName/gmd:PT_FreeText/gmd:textGroup"
+        ],
+        multiplicity="1..*",
+    )
+)
+
+ISODocument.elements.append(
+    ISOResponsibleParty(
+        name="cited-responsible-party",
+        search_paths=[
+            "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:citedResponsibleParty/gmd:CI_ResponsibleParty",
+            "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:citation/gmd:CI_Citation/gmd:citedResponsibleParty/gmd:CI_ResponsibleParty"
         ],
         multiplicity="1..*",
     )
@@ -142,15 +163,87 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
             log.info('::::::::: Localised _package_dict saved in memory :::::::::')
 
+            log.info('::::::::: Checking for the Organization :::::::::')
+
+            ## Configuring package organizations         
+            organisation_mapping = self.source_config.get('organisation_mapping', [])
+
+            if organisation_mapping:
+                organisation = self.handle_organization(harvest_object, organisation_mapping, iso_values)
+                if organisation:
+                    log.info(':::::::::::::package_dict[owner_org]::::::::::::: %r ', package_dict.get('owner_org'))
+                    package_dict['owner_org'] = organisation
+                    log.info(':::::::::::::package_dict[owner_org]::::::::::::: %r ', package_dict.get('owner_org'))
+
         # End of processing, return the modified package
         return package_dict
+
+    def handle_organization(self, harvest_object, organisation_mapping, values):
+        citedResponsiblePartys = values["cited-responsible-party"]
+        
+        organisation = None
+        for party in citedResponsiblePartys:
+            if party["role"] == "custodian":                
+                for org in organisation_mapping:
+                    log.info(':::::::::::::::::::::::::: %r ', party["organisation-name"])
+                    if org.get("value") == party["organisation-name"]:
+                        existing_org = model.Session.query(model.Group).filter(model.Group.name == org.get("key")).first()
+
+                        if not existing_org:
+                            log.warning('::::::::: Organisation not found in CKAN, assigning default :::::::::')
+                        else:
+                            organisation = existing_org.id
+
+                            log.info(':::::::::::::-cited-responsible-party-::::::::::::: %r ', existing_org)
+
+                            log.debug('::::: Collecting localized data from the organization name :::::')
+                            localized_org = []
+
+                            localized_org.append({
+                                'text': org.get("value"),
+                                'locale': self._ckan_locales_mapping[values["metadata-language"].lower()]
+                            })
+
+                            for entry in party["organisation-name-localized"]:
+                                if entry['text'] and entry['locale'].lower()[1:]:
+                                    if self._ckan_locales_mapping[entry['locale'].lower()[1:]]:
+                                        localized_org.append({
+                                            'text': entry['text'],
+                                            'locale': self._ckan_locales_mapping[entry['locale'].lower()[1:]]
+                                        })
+                                    else:
+                                        log.warning('Locale Mapping not found for organization name, entry skipped!')
+                                else:
+                                    log.warning('TextGroup data not available for organization name, entry skipped!')
+                            session = Session
+                            rows = session.query(GroupMultilang).filter(GroupMultilang.group_id == organisation).all()
+                            
+                            for localized_entry in localized_org:
+                                insert = True
+                                for row in rows:
+                                    if row.lang == localized_entry.get("locale") and row.field == 'title':
+                                        # Updating the org localized record
+                                        row.text = localized_entry.get("text")
+                                        row.save()
+                                        insert = False
+
+                                if insert:
+                                    # Inserting the missing org localized record
+                                    session.add_all([
+                                        GroupMultilang(group_id=organisation, name=existing_org.name, field='title', lang=localized_entry.get("locale"), text=localized_entry.get("text")),
+                                        GroupMultilang(group_id=organisation, name=existing_org.name, field='description', lang=localized_entry.get("locale"), text=localized_entry.get("text"))
+                                    ])
+
+        return organisation
 
     def after_import_stage(self, package_dict):        
         log.info('::::::::: Performing after_import_stage  persist operation for localised dataset content :::::::::')
 
+        log.info("::::::::::::::::::::::::: %r", package_dict)
         if self._package_dict:            
             session = Session
 
+            # Persisting localized packages 
             try:
                 package_id = package_dict.get('id')
 
