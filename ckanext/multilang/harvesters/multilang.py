@@ -171,9 +171,7 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
             if organisation_mapping:
                 organisation = self.handle_organization(harvest_object, organisation_mapping, iso_values)
                 if organisation:
-                    log.info(':::::::::::::package_dict[owner_org]::::::::::::: %r ', package_dict.get('owner_org'))
                     package_dict['owner_org'] = organisation
-                    log.info(':::::::::::::package_dict[owner_org]::::::::::::: %r ', package_dict.get('owner_org'))
 
         # End of processing, return the modified package
         return package_dict
@@ -185,7 +183,6 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
         for party in citedResponsiblePartys:
             if party["role"] == "custodian":                
                 for org in organisation_mapping:
-                    log.info(':::::::::::::::::::::::::: %r ', party["organisation-name"])
                     if org.get("value") == party["organisation-name"]:
                         existing_org = model.Session.query(model.Group).filter(model.Group.name == org.get("key")).first()
 
@@ -193,8 +190,6 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
                             log.warning('::::::::: Organisation not found in CKAN, assigning default :::::::::')
                         else:
                             organisation = existing_org.id
-
-                            log.info(':::::::::::::-cited-responsible-party-::::::::::::: %r ', existing_org)
 
                             log.debug('::::: Collecting localized data from the organization name :::::')
                             localized_org = []
@@ -215,31 +210,48 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
                                         log.warning('Locale Mapping not found for organization name, entry skipped!')
                                 else:
                                     log.warning('TextGroup data not available for organization name, entry skipped!')
-                            session = Session
-                            rows = session.query(GroupMultilang).filter(GroupMultilang.group_id == organisation).all()
-                            
-                            for localized_entry in localized_org:
-                                insert = True
-                                for row in rows:
-                                    if row.lang == localized_entry.get("locale") and row.field == 'title':
-                                        # Updating the org localized record
-                                        row.text = localized_entry.get("text")
-                                        row.save()
-                                        insert = False
 
-                                if insert:
-                                    # Inserting the missing org localized record
-                                    session.add_all([
-                                        GroupMultilang(group_id=organisation, name=existing_org.name, field='title', lang=localized_entry.get("locale"), text=localized_entry.get("text")),
-                                        GroupMultilang(group_id=organisation, name=existing_org.name, field='description', lang=localized_entry.get("locale"), text=localized_entry.get("text"))
-                                    ])
+                            log.debug("::::::::::::: Persisting localized ORG :::::::::::::")      
+                            
+                            try: 
+                                session = Session
+                                rows = session.query(GroupMultilang).filter(GroupMultilang.group_id == organisation).all()
+
+                                for localized_entry in localized_org:
+                                    insert = True
+                                    for row in rows:
+                                        if row.lang == localized_entry.get("locale") and row.field == 'title':
+                                            # Updating the org localized record
+                                            row.text = localized_entry.get("text")
+                                            row.save()
+                                            insert = False
+
+                                            log.debug("::::::::::::: ORG locale successfully updated :::::::::::::") 
+
+                                    if insert:
+                                        # Inserting the missing org localized record
+                                        session.add_all([
+                                            GroupMultilang(group_id=organisation, name=existing_org.name, field='title', lang=localized_entry.get("locale"), text=localized_entry.get("text")),
+                                            GroupMultilang(group_id=organisation, name=existing_org.name, field='description', lang=localized_entry.get("locale"), text=localized_entry.get("text"))
+                                        ])
+
+                                        session.commit()
+                                        log.debug("::::::::::::: ORG locale successfully added :::::::::::::")
+
+                                pass
+                            except Exception, e:
+                                # on rollback, the same closure of state
+                                # as that of commit proceeds. 
+                                session.rollback()
+
+                                log.error('Exception occurred while persisting DB objects: %s', e)
+                                raise
 
         return organisation
 
     def after_import_stage(self, package_dict):        
         log.info('::::::::: Performing after_import_stage  persist operation for localised dataset content :::::::::')
 
-        log.info("::::::::::::::::::::::::: %r", package_dict)
         if self._package_dict:            
             session = Session
 
