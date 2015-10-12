@@ -163,13 +163,14 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
             log.info('::::::::: Localised _package_dict saved in memory :::::::::')
 
-            log.info('::::::::: Checking for the Organization :::::::::')
-
             ## Configuring package organizations         
             organisation_mapping = self.source_config.get('organisation_mapping', [])
 
             if organisation_mapping:
+                log.info('::::::::: Checking for the Organization :::::::::')
+
                 organisation = self.handle_organization(harvest_object, organisation_mapping, iso_values)
+                
                 if organisation:
                     package_dict['owner_org'] = organisation
 
@@ -181,7 +182,7 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
         
         organisation = None
         for party in citedResponsiblePartys:
-            if party["role"] == "custodian":                
+            if party["role"] == "owner":                
                 for org in organisation_mapping:
                     if org.get("value") == party["organisation-name"]:
                         existing_org = model.Session.query(model.Group).filter(model.Group.name == org.get("key")).first()
