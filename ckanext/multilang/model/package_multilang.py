@@ -101,12 +101,8 @@ class PackageMultilang(DomainObject):
 
     @classmethod
     def get_for_package(self, package_id):
-        log.debug("::::::::::::::::::: get_for_package:   %r", package_id)
         obj = meta.Session.query(self).autoflush(False)
-
-        records = obj.filter_by(package_id=package_id)
-        log.debug("::::::::::::::::::: records:   %r", records)
-        
+        records = obj.filter_by(package_id=package_id)        
         return records
 
 meta.mapper(PackageMultilang, package_multilang_table)
