@@ -16,7 +16,7 @@ import ckan.lib.navl.dictization_functions as dict_fns
 
 from ckan.common import OrderedDict, c, g, request, _
 
-from ckanext.multilang.model import PackageMultilang, GroupMultilang
+from ckanext.multilang.model import PackageMultilang, GroupMultilang, TagMultilang
 from ckan.controllers.group import GroupController
 
 log = logging.getLogger(__name__)
@@ -230,7 +230,7 @@ class MultilangGroupController(GroupController):
                                                g.facets_default_number))
                 c.search_facets_limits[facet] = limit
 
-            # Localizing Organizations display names in Facet list
+            # MULTILANG - Localizing Organizations display names in Facet list
             organizations = c.search_facets.get('organization')
 
             for org in organizations.get('items'):
@@ -241,7 +241,7 @@ class MultilangGroupController(GroupController):
                         if result.field == 'title':
                             org['display_name'] = result.text
 
-            # Localizing Groups display names in Facet list
+            # MULTILANG - Localizing Groups display names in Facet list
             groups = c.search_facets.get('groups')
             for group in groups.get('items'):
                 q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.name == group.get('name'), GroupMultilang.lang == lang).all() 
@@ -251,9 +251,17 @@ class MultilangGroupController(GroupController):
                         if result.field == 'title':
                             group['display_name'] = result.text
 
-            # Localizing Datasets names and descriptions in search list
-            c.page.items = query['results']
+             # MULTILANG - Localizing Tags display names in Facet list
+            tags = c.search_facets.get('tags')
+            for tag in tags.get('items'):
+                localized_tag = TagMultilang.by_name(tag.get('name'), lang)
 
+                if localized_tag:
+                    tag['display_name'] = localized_tag.text
+
+            c.page.items = query['results']
+            
+            # MULTILANG - Localizing Datasets names and descriptions in search list
             log.info(':::::::::::: Retrieving the corresponding localized title and abstract :::::::::::::::')
 
             for item in c.page.items:

@@ -19,9 +19,39 @@
   {{ form.markdown('notes', id='field-notes', label=_('Description'), placeholder=_('eg. Some useful notes about the data'), value=data.notes, error=errors.notes) }}
 {% endblock %}
 
-{% block package_basic_fields_tags %}
+{% block package_basic_fields_tags %}  
   {% set tag_attrs = {'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?'} %}
   {{ form.input('tag_string', id='field-tags', label=_('Tags'), placeholder=_('eg. economy, mental health, government'), value=data.tag_string, error=errors.tags, classes=['control-full'], attrs=tag_attrs) }}
+
+  <div data-module="custom-fields">
+    {% for tag in data.tags %}
+      {% set prefix = 'extra_tag__%d__' % loop.index0 %}
+      {{ form.custom(
+        names=(prefix ~ 'key', prefix ~ 'value', prefix ~ 'deleted'),
+        id='field-extra-tag-%d' % loop.index,
+        label=_('Localized Tag Name'),
+        values=(tag.name, tag.display_name, False),
+        error=errors[prefix ~ 'key'] or errors[prefix ~ 'value']
+      ) }}  
+    {% endfor %}
+
+    {# Add a max of 1 empty columns #}
+    {% set total_extras = data.tags|count %}
+    {% set empty_extras = (limit or 1) - total_extras %}
+    {% if empty_extras <= 0 %}{% set empty_extras = 1 %}{% endif %}
+
+    {% for extra in range(total_extras, total_extras + empty_extras) %}
+      {% set index = loop.index0 + (data.tags|count) %}
+      {% set prefix = 'extra_tag__%d__' % index %}
+      {{ form.custom(
+        names=(prefix ~ 'key', prefix ~ 'value', prefix ~ 'deleted'),
+        id='field-extra-tag-%d' % index,
+        label=_('Localized Tag Name'),
+        values=('', '', False),
+        error=errors[prefix ~ 'key'] or errors[prefix ~ 'value']
+      ) }}
+    {% endfor %}
+  </div>
 {% endblock %}
 
 {% block package_basic_fields_license %}

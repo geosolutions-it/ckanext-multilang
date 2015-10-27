@@ -27,7 +27,7 @@ from ckan.lib.navl.validators import not_empty
 from ckan.common import OrderedDict, _, json, request, c, g, response
 
 from ckan.controllers.package import PackageController
-from ckanext.multilang.model import PackageMultilang, GroupMultilang, ResourceMultilang
+from ckanext.multilang.model import PackageMultilang, GroupMultilang, ResourceMultilang, TagMultilang
 
 from ckan.controllers.home import CACHE_PARAMETERS
 
@@ -218,6 +218,14 @@ class MultilangPackageController(PackageController):
 
             lang = get_lang()[0]
             
+            #  MULTILANG - Localizing Tags display names in Facet list
+            tags = c.search_facets.get('tags')
+            for tag in tags.get('items'):
+                localized_tag = TagMultilang.by_name(tag.get('name'), lang)
+
+                if localized_tag:
+                    tag['display_name'] = localized_tag.text
+            
             #  MULTILANG - Localizing Organizations display names in Facet list
             organizations = c.search_facets.get('organization')
 
@@ -345,6 +353,15 @@ class MultilangPackageController(PackageController):
 
         lang = get_lang()[0]        
 
+        #  MULTILANG - Localizing Tags display names in Facet list
+        tags = c.pkg_dict['tags']
+        for tag in tags:
+            localized_tag = TagMultilang.by_tag_id(tag.get('id'), lang)
+
+            if localized_tag:
+                tag['display_name'] = localized_tag.text
+
+        #  MULTILANG - Localizing package sub dict for the dataset read page
         q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == c.pkg_dict['id'], PackageMultilang.lang == lang).all() 
 
         if q_results:
@@ -425,6 +442,14 @@ class MultilangPackageController(PackageController):
 
         lang = get_lang()[0]
 
+        #  MULTILANG - Localizing Tags display names in Facet list
+        tags = data['tags']
+        for tag in tags:
+            localized_tag = TagMultilang.by_tag_id(tag.get('id'), lang)
+
+            if localized_tag:
+                tag['display_name'] = localized_tag.text
+
         q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == data.get('id'), PackageMultilang.lang == lang).all()
 
         if q_results:
@@ -484,6 +509,37 @@ class MultilangPackageController(PackageController):
                                   'form_snippet': form_snippet,
                                   'dataset_type': package_type})
 
+    def localized_tags_persist(self, extra_tag, pkg_dict, lang):
+        if extra_tag:
+            for tag in extra_tag:
+                localized_tag = TagMultilang.by_name(tag.get('key'), lang)
+
+                if localized_tag and localized_tag.text != tag.get('value'):
+                    localized_tag.text = tag.get('value')
+                    localized_tag.save()
+                elif localized_tag is None:
+                    # Find the tag id from the existing tags in dict
+                    tag_id = None
+                    for dict_tag in pkg_dict.get('tags'):
+                        if dict_tag.get('name') == tag.get('key'):
+                            tag_id = dict_tag.get('id')
+
+                    if tag_id:
+                        session = model.Session
+                        try:
+                            session.add_all([
+                                TagMultilang(tag_id=tag_id, tag_name=tag.get('key'), lang=lang, text=tag.get('value')),
+                            ])
+
+                            session.commit()
+                        except Exception, e:
+                            # on rollback, the same closure of state
+                            # as that of commit proceeds. 
+                            session.rollback()
+
+                            log.error('Exception occurred while persisting DB objects: %s', e)
+                            raise
+
     def _save_new(self, context, package_type=None):
         # The staged add dataset used the new functionality when the dataset is
         # partially created so we need to know if we actually are updating or
@@ -530,11 +586,23 @@ class MultilangPackageController(PackageController):
 
             data_dict['type'] = package_type
             context['message'] = data_dict.get('log_message', '')
+
+            #  MULTILANG - retrieving dict for localized tag's strings
+            extra_tag = None
+            if data_dict.get('extra_tag'):
+                extra_tag = data_dict.get('extra_tag')
+                # After saving in memory the extra_tag dict this must be removed because not present in the schema
+                del data_dict['extra_tag']
+
             pkg_dict = get_action('package_create')(context, data_dict)
+
+            lang = get_lang()[0]
+
+            #  MULTILANG - persisting tags
+            self.localized_tags_persist(extra_tag, pkg_dict, lang)
 
             # MULTILANG - persisting the localized package dict
             log.info('::::: Persisting localised metadata locale :::::')
-            lang = get_lang()[0]
 
             session = model.Session
             try:
@@ -603,16 +671,26 @@ class MultilangPackageController(PackageController):
             context['message'] = data_dict.get('log_message', '')
             data_dict['id'] = name_or_id
 
+            #  MULTILANG - retrieving dict for localized tag's strings
+            extra_tag = None
+            if data_dict.get('extra_tag'):
+                extra_tag = data_dict.get('extra_tag')
+                # After saving in memory the extra_tag dict this must be removed because not present in the schema
+                del data_dict['extra_tag']
+
             pkg = get_action('package_update')(context, data_dict)
             
             c.pkg = context['package']
             c.pkg_dict = pkg
 
-            #  MULTILANG - persisting package dict
-            log.info(':::::::::::: Saving the corresponding localized title and abstract :::::::::::::::')
-
             lang = get_lang()[0]
 
+            #  MULTILANG - persisting tags
+            self.localized_tags_persist(extra_tag, c.pkg_dict, lang)
+
+            #  MULTILANG - persisting package dict
+            log.info(':::::::::::: Saving the corresponding localized title and abstract :::::::::::::::')
+            
             q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == c.pkg_dict.get('id'), PackageMultilang.lang == lang).all()
             
             if q_results:

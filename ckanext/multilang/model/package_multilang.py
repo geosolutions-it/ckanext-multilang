@@ -15,7 +15,7 @@ from ckan import model
 
 log = logging.getLogger(__name__)
 
-__all__ = ['PackageMultilang', 'package_multilang_table', 'GroupMultilang', 'ResourceMultilang', 'group_multilang_table', 'setup']
+__all__ = ['PackageMultilang', 'package_multilang_table', 'GroupMultilang', 'ResourceMultilang', 'group_multilang_table', 'TagMultilang', 'tag_multilang_table', 'setup']
 
 package_multilang_table = Table('package_multilang', meta.metadata,
     Column('id', types.Integer, primary_key=True),
@@ -37,6 +37,13 @@ resource_multilang_table = Table('resource_multilang', meta.metadata,
     Column('id', types.Integer, primary_key=True),
     Column('resource_id', types.UnicodeText, ForeignKey("resource.id", ondelete="CASCADE"), nullable=False),
     Column('field', types.UnicodeText, nullable=False, index=True),
+    Column('lang', types.UnicodeText, nullable=False, index=True),
+    Column('text', types.UnicodeText, nullable=False, index=True))
+
+tag_multilang_table = Table('tag_multilang', meta.metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('tag_id', types.UnicodeText, ForeignKey("tag.id", ondelete="CASCADE"), nullable=False),
+    Column('tag_name', types.UnicodeText, nullable=False, index=True),
     Column('lang', types.UnicodeText, nullable=False, index=True),
     Column('text', types.UnicodeText, nullable=False, index=True))
 
@@ -91,6 +98,22 @@ def setup():
     else:
         log.info('Resource Multilingual table already exist')
 
+    #Setting up tag multilang table
+    if not tag_multilang_table.exists():
+        try:
+            tag_multilang_table.create()
+        except Exception,e:
+            # Make sure the table does not remain incorrectly created
+            if tag_multilang_table.exists():
+                Session.execute('DROP TABLE tag_multilang')
+                Session.commit()
+
+            raise e
+
+        log.info('Tag Multilingual table created')
+    else:
+        log.info('Tag Multilingual table already exist')
+
 class PackageMultilang(DomainObject):
     def __init__(self, package_id=None, field=None, field_type=None, lang=None, text=None):
         self.package_id = package_id
@@ -125,3 +148,26 @@ class ResourceMultilang(DomainObject):
         self.text = text
 
 meta.mapper(ResourceMultilang, resource_multilang_table)
+
+class TagMultilang(DomainObject):
+    def __init__(self, tag_id=None, tag_name=None, lang=None, text=None):
+        self.tag_id = tag_id
+        self.tag_name = tag_name
+        self.lang = lang
+        self.text = text
+
+    @classmethod
+    def by_name(self, tag_name, tag_lang, autoflush=True):
+        query = meta.Session.query(TagMultilang).filter(TagMultilang.tag_name==tag_name, TagMultilang.lang==tag_lang)
+        query = query.autoflush(autoflush)
+        tag = query.first()
+        return tag
+
+    @classmethod
+    def by_tag_id(self, tag_id, tag_lang, autoflush=True):
+        query = meta.Session.query(TagMultilang).filter(TagMultilang.tag_id==tag_id, TagMultilang.lang==tag_lang)
+        query = query.autoflush(autoflush)
+        tag = query.first()
+        return tag
+
+meta.mapper(TagMultilang, tag_multilang_table)
