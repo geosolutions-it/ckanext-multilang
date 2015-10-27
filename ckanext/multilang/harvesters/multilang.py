@@ -216,7 +216,6 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
                 #Getting keyword for default metadata locale
                 for keyword in tag_entry['keyword']:      
-                    log.info("DDDDDDDDDDDDDDDDDDDDDDDDDDD %r", keyword)             
                     localized_tags.append({
                         'text': keyword,
                         'localized_text': keyword,
