@@ -1,5 +1,7 @@
 {% import 'macros/form.html' as form %}
 
+{% import 'macros/form_macros.html' as form_macros %}
+
 {% block package_basic_fields_title %}
   {{ form.input('title', id='field-title', label=_('Title'), placeholder=_('eg. A descriptive title'), value=data.title, error=errors.title, classes=['control-full', 'control-large'], attrs={'data-module': 'slug-preview-target'}) }}
 {% endblock %}
@@ -26,12 +28,13 @@
   <div data-module="custom-fields">
     {% for tag in data.tags %}
       {% set prefix = 'extra_tag__%d__' % loop.index0 %}
-      {{ form.custom(
+      {{ form_macros.custom_tag(
         names=(prefix ~ 'key', prefix ~ 'value', prefix ~ 'deleted'),
         id='field-extra-tag-%d' % loop.index,
         label=_('Localized Tag Name'),
         values=(tag.name, tag.display_name, False),
-        error=errors[prefix ~ 'key'] or errors[prefix ~ 'value']
+        error=errors[prefix ~ 'key'] or errors[prefix ~ 'value'],
+        attrs={'readonly': 'true'}
       ) }}  
     {% endfor %}
 
