@@ -367,7 +367,8 @@ class MultilangPackageController(PackageController):
         if q_results:
             for result in q_results:
                 c.pkg_dict[result.field] = result.text
-                c.pkg.notes = result.text
+                if result.field == 'notes':
+                    c.pkg.notes = result.text
 
         #  MULTILANG - Localizing organization sub dict for the dataset read page
         organization = c.pkg_dict.get('organization')
