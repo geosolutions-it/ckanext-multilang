@@ -614,7 +614,7 @@ class MultilangPackageController(PackageController):
             # MULTILANG - persisting the localized package dict
             log.info('::::: Persisting localised metadata locale :::::')
             pkg_to_persist = []
-            for field in self.pkg_localized_fields:
+            for field in self.pkg_localized_fields and pkg_dict.get(field):
                 pkg_to_persist.append(PackageMultilang(package_id=pkg_dict.get('id'), field=field, field_type='localized', lang=lang, text=pkg_dict.get(field)))
             
             if len(pkg_to_persist) > 0:
@@ -705,7 +705,7 @@ class MultilangPackageController(PackageController):
                 ## Check for missing localized fields in DB
                 obj_to_persist = []
                 for field in self.pkg_localized_fields:
-                    if field not in pkg_processed_field:
+                    if field not in pkg_processed_field and c.pkg_dict.get(field):
                         obj_to_persist.append(PackageMultilang(package_id=c.pkg_dict.get('id'), field=field, field_type='localized', lang=lang, text=c.pkg_dict.get(field)))
 
                 if len(obj_to_persist) > 0:
@@ -714,7 +714,7 @@ class MultilangPackageController(PackageController):
             else:
                 log.info(':::::::::::: Localised fields are missing in package_multilang table, persisting defaults using values in the table package :::::::::::::::')
                 pkg_to_persist = []
-                for field in self.pkg_localized_fields:
+                for field in self.pkg_localized_fields and c.pkg_dict.get(field):
                     pkg_to_persist.append(PackageMultilang(package_id=c.pkg_dict.get('id'), field=field, field_type='localized', lang=lang, text=c.pkg_dict.get(field)))
                 
                 if len(pkg_to_persist) > 0:
