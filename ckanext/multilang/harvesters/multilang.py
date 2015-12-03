@@ -262,7 +262,7 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
                         existing_org = model.Session.query(model.Group).filter(model.Group.name == org.get("key")).first()
 
                         if not existing_org:
-                            log.warning('::::::::: Organisation not found in CKAN, assigning default :::::::::')
+                            log.warning('::::::::: Organisation not found in CKAN: %r: assigning default :::::::::', org.get("key"))
                         else:
                             organisation = existing_org.id
 
