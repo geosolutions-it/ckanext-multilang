@@ -138,6 +138,18 @@ class GroupMultilang(DomainObject):
         self.lang = lang
         self.text = text
 
+    @classmethod
+    def get_for_group_id(self, group_id):
+        obj = meta.Session.query(self).autoflush(False)
+        records = obj.filter_by(group_id=group_id)
+        return records
+
+    @classmethod
+    def get_for_group_name(self, group_name):
+        obj = meta.Session.query(self).autoflush(False)
+        records = obj.filter_by(name=group_name)    
+        return records
+
 meta.mapper(GroupMultilang, group_multilang_table)
 
 class ResourceMultilang(DomainObject):

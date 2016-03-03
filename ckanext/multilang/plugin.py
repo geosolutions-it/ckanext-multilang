@@ -101,10 +101,26 @@ class MultilangPlugin(plugins.SingletonPlugin):
         from ckanext.multilang.model import PackageMultilang
         multilang_localized = PackageMultilang.get_for_package(pkg_dict['id'])
 
-        for record in multilang_localized:
-            log.debug('...Creating index for localized field: ' + record.field + ' - ' + record.lang)
-            pkg_dict['multilang_localized_' + record.field + '_' + record.lang] = record.text
-            log.debug('Index successfully created: %r', pkg_dict.get('multilang_localized_' + record.field + '_' + record.lang))
+        for package in multilang_localized:
+            log.debug('...Creating index for Package localized field: ' + package.field + ' - ' + package.lang)
+            pkg_dict['package_multilang_localized_' + package.field + '_' + package.lang] = package.text
+            log.debug('Index successfully created for Package: %r', pkg_dict.get('package_multilang_localized_' + package.field + '_' + package.lang))
+
+        from ckanext.multilang.model import GroupMultilang
+        multilang_localized = GroupMultilang.get_for_group_name(str(pkg_dict['organization']))
+
+        for organization in multilang_localized:
+            log.debug('...Creating index for Organization localized field: ' + organization.field + ' - ' + organization.lang)
+            pkg_dict['organization_multilang_localized_' + organization.field + '_' + organization.lang] = organization.text
+            log.debug('Index successfully created for Organization: %r', pkg_dict.get('organization_multilang_localized_' + organization.field + '_' + organization.lang))
+
+        for group in pkg_dict['groups']:
+            multilang_localized = GroupMultilang.get_for_group_name(str(group))
+
+            for record in multilang_localized:
+                log.debug('...Creating index for Group localized field: ' + organization.field + ' - ' + organization.lang)
+                pkg_dict['group_multilang_localized_' + record.field + '_' + record.lang] = record.text
+                log.debug('Index successfully created for Group: %r', pkg_dict.get('group_multilang_localized_' + organization.field + '_' + organization.lang))
 
         return pkg_dict
         
