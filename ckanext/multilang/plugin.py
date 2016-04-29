@@ -4,6 +4,7 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
 import ckanext.multilang.helpers as helpers
+import ckanext.multilang.actions as actions
 
 from routes.mapper import SubMapper, Mapper as _Mapper
 
@@ -15,6 +16,7 @@ class MultilangPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
+    plugins.implements(plugins.IActions)
 
     # IConfigurer
     def update_config(self, config_):
@@ -106,7 +108,7 @@ class MultilangPlugin(plugins.SingletonPlugin):
             pkg_dict['package_multilang_localized_' + package.field + '_' + package.lang] = package.text
             log.debug('Index successfully created for Package: %r', pkg_dict.get('package_multilang_localized_' + package.field + '_' + package.lang))
 
-        from ckanext.multilang.model import GroupMultilang
+        '''from ckanext.multilang.model import GroupMultilang
         multilang_localized = GroupMultilang.get_for_group_name(str(pkg_dict['organization']))
 
         for organization in multilang_localized:
@@ -120,9 +122,15 @@ class MultilangPlugin(plugins.SingletonPlugin):
             for record in multilang_localized:
                 log.debug('...Creating index for Group localized field: ' + organization.field + ' - ' + organization.lang)
                 pkg_dict['group_multilang_localized_' + record.field + '_' + record.lang] = record.text
-                log.debug('Index successfully created for Group: %r', pkg_dict.get('group_multilang_localized_' + organization.field + '_' + organization.lang))
+                log.debug('Index successfully created for Group: %r', pkg_dict.get('group_multilang_localized_' + organization.field + '_' + organization.lang))'''
 
         return pkg_dict
+
+    def get_actions(self):
+        return {
+            'group_list': actions.group_list,
+            'organization_list': actions.organization_list
+        }
         
     '''
     def before_search(self, search_params):
