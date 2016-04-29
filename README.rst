@@ -53,18 +53,9 @@ To install ckanext-multilang:
    
    Inside the 'fields' Tag:
       <dynamicField name="package_multilang_localized_*" type="text" indexed="true" stored="true" multiValued="false"/>
-      
-      <dynamicField name="organization_multilang_localized_*" type="text" indexed="true" stored="true" multiValued="false"/>
-      
-      <dynamicField name="group_multilang_localized_*" type="text" indexed="true" stored="true" multiValued="false"/>
-
    
    A new 'copyField' to append:
       <copyField source="package_multilang_localized_*" dest="text"/>
-      
-      <copyField source="organization_multilang_localized_*" dest="text"/>
-      
-      <copyField source="group_multilang_localized_*" dest="text"/>
       
 
 9. Restart Solr.
