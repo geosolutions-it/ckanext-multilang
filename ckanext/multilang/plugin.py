@@ -123,7 +123,6 @@ class MultilangPlugin(plugins.SingletonPlugin):
         return odict
 
     def after_search(self, search_results, search_params):
-        #log.info('after_search:::::::::::::::::::::: %r', search_results)
         lang = get_lang()[0]
         search_facets = search_results.get('search_facets')
 
