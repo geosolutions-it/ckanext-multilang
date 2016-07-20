@@ -111,8 +111,8 @@
             {% set selected_org = (existing_org and existing_org == organization.id) or (not existing_org and not data.id and organization.id == organizations_available[0].id) %}
             
             <!-- Multilang extension set the localized org name using helper function -->
-            {% set localized_org_name = h.get_localized_org(organization.id) %}
-            <option value="{{ organization.id }}" {% if selected_org %} selected="selected" {% endif %}>{{ (localized_org_name) or (organization.display_name) }}</option>
+            {% set localized_org = h.get_localized_group(organization) %}
+            <option value="{{ organization.id }}" {% if selected_org %} selected="selected" {% endif %}>{{ (localized_org.display_name) or (organization.display_name) }}</option>
           {% endfor %}
         </select>
       </div>
