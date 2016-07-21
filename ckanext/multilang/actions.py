@@ -139,28 +139,7 @@ def _group_or_org_list(context, data_dict, is_org=False):
                      asbool(data_dict.get('include_extras', False))
 
     query = model.Session.query(model.Group)
-
-    ## MULTILANG FRAGMENT
-    if q:
-        q = u'%{0}%'.format(q)
-
-        lang = get_lang()[0]
-        groups_multilang_id_list = []
-
-        q_results = model.Session.query(GroupMultilang).filter(
-            GroupMultilang.lang.ilike(lang),
-            GroupMultilang.text.ilike(q)
-        ).all()
-
-        if q_results:
-            for result in q_results:
-                log.debug(":::::::::::::: Group ID Found:::: %r", result.group_id)
-                groups_multilang_id_list.append(result.group_id)
-            groups_multilang_id_list = set(groups_multilang_id_list)
-
-        if len(groups_multilang_id_list) > 0:
-            query = query.filter(model.Group.id.in_(groups_multilang_id_list))
-
+    
     if include_extras:
         # this does an eager load of the extras, avoiding an sql query every
         # time group_list_dictize accesses a group's extra.
@@ -171,13 +150,38 @@ def _group_or_org_list(context, data_dict, is_org=False):
         query = query.filter(model.Group.name.in_(groups))
     if q:
         q = u'%{0}%'.format(q)
-        query = query.filter(_or_(
-            model.Group.name.ilike(q),
-            model.Group.title.ilike(q),
-            model.Group.description.ilike(q),
-        ))
+        
+        ## MULTILANG FRAGMENT
+        lang = get_lang()[0]
+        groups_multilang_id_list = []
 
-    ## END OF MULTILANG FRAGMENT
+        q_results = model.Session.query(GroupMultilang).filter(
+            GroupMultilang.lang.ilike(lang),
+            GroupMultilang.text.ilike(q)
+        ).all()
+
+        if q_results:
+            for result in q_results:
+                log.info(":::::::::::::: Group ID Found:::: %r", result.group_id)
+                groups_multilang_id_list.append(result.group_id)
+                
+            groups_multilang_id_list = set(groups_multilang_id_list)
+
+        if len(groups_multilang_id_list) > 0:
+            #query = query.filter(model.Group.id.in_(groups_multilang_id_list))
+            query = query.filter(_or_(
+                model.Group.name.ilike(q),
+                model.Group.title.ilike(q),
+                model.Group.description.ilike(q),
+                model.Group.id.in_(groups_multilang_id_list)
+            ))
+        else:
+            query = query.filter(_or_(
+                model.Group.name.ilike(q),
+                model.Group.title.ilike(q),
+                model.Group.description.ilike(q)
+            ))
+        ## END OF MULTILANG FRAGMENT
 
     query = query.filter(model.Group.is_organization == is_org)
     if not is_org:
