@@ -4,7 +4,7 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
 import ckanext.multilang.helpers as helpers
-#import ckanext.multilang.actions as actions
+import ckanext.multilang.actions as actions
 
 
 import ckan.lib.dictization.model_dictize as model_dictize
@@ -26,7 +26,7 @@ class MultilangPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IGroupController, inherit=True)
     plugins.implements(plugins.IOrganizationController, inherit=True)
     plugins.implements(plugins.IResourceController, inherit=True)
-    #plugins.implements(plugins.IActions, inherit=True)
+    plugins.implements(plugins.IActions, inherit=True)
 
     # IConfigurer
     def update_config(self, config_):
@@ -42,11 +42,11 @@ class MultilangPlugin(plugins.SingletonPlugin):
             'get_localized_resource': helpers.get_localized_resource
         }
 
-    '''def get_actions(self):
+    def get_actions(self):
         return {
             'group_list': actions.group_list,
             'organization_list': actions.organization_list
-        }'''
+        }
 
     def before_map(self, map):
         map.connect('/dataset/edit/{id}', controller='ckanext.multilang.controllers.package:MultilangPackageController', action='edit')
