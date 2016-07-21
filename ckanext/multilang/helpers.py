@@ -48,15 +48,16 @@ def get_localized_pkg(pkg_dict):
 
 def get_localized_group(org_dict):
     #  MULTILANG - Localizing group dict
-    lang = get_lang()[0]
-    
-    q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == org_dict.get('id'), GroupMultilang.lang == lang).all()
+    if org_dict != '' and 'type' in org_dict:
+        lang = get_lang()[0]
+        
+        q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == org_dict.get('id'), GroupMultilang.lang == lang).all()
 
-    if q_results:
-        for result in q_results:
-            org_dict[result.field] = result.text
-            if result.field == 'title':
-                org_dict['display_name'] = result.text
+        if q_results:
+            for result in q_results:
+                org_dict[result.field] = result.text
+                if result.field == 'title':
+                    org_dict['display_name'] = result.text
 
     return org_dict
 

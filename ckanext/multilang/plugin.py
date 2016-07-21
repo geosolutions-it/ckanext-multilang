@@ -26,7 +26,6 @@ class MultilangPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IGroupController, inherit=True)
     plugins.implements(plugins.IOrganizationController, inherit=True)
     plugins.implements(plugins.IResourceController, inherit=True)
-    #plugins.implements(plugins.IFacets, inherit=True)
     #plugins.implements(plugins.IActions, inherit=True)
 
     # IConfigurer
@@ -67,93 +66,99 @@ class MultilangPlugin(plugins.SingletonPlugin):
 
     def before_view(self, odict):        
         otype = odict.get('type')
-        lang = get_lang()[0]
 
-        if otype == 'group' or otype == 'organization':
-            #  MULTILANG - Localizing Group/Organizzation names and descriptions in search list
-            q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == odict.get('id'), GroupMultilang.lang == lang).all() 
+        if get_lang():
+            lang = get_lang()[0]
 
-            if q_results:
-                for result in q_results:
-                    odict[result.field] = result.text
-                    if result.field == 'title':
-                        odict['display_name'] = result.text
+            if otype == 'group' or otype == 'organization':
+                #  MULTILANG - Localizing Group/Organizzation names and descriptions in search list
+                q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == odict.get('id'), GroupMultilang.lang == lang).all() 
 
-
-        elif otype == 'dataset':
-            #  MULTILANG - Localizing Datasets names and descriptions in search list
-            #  MULTILANG - Localizing Tags display names in Facet list
-            tags = odict['tags']
-            for tag in tags:
-                localized_tag = TagMultilang.by_tag_id(tag.get('id'), lang)
-
-                if localized_tag:
-                    tag['display_name'] = localized_tag.text
-
-            #  MULTILANG - Localizing package sub dict for the dataset read page
-            q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == odict['id'], PackageMultilang.lang == lang).all() 
-
-            if q_results:
-                for result in q_results:
-                    odict[result.field] = result.text
-                    if result.field == 'notes':
-                        odict['notes'] = result.text
-
-            #  MULTILANG - Localizing organization sub dict for the dataset read page
-            organization = odict.get('organization')
-            if organization:
-                q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == organization.get('id'), GroupMultilang.lang == lang).all() 
-                
                 if q_results:
                     for result in q_results:
-                        organization[result.field] = result.text
+                        odict[result.field] = result.text
+                        if result.field == 'title':
+                            odict['display_name'] = result.text
 
-                odict['organization'] = organization
 
-            #  MULTILANG - Localizing resources dict
-            resources = odict.get('resources')
-            if resources:
-                for resource in resources:
-                    q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource.get('id'), ResourceMultilang.lang == lang).all()
-            
+            elif otype == 'dataset':
+                #  MULTILANG - Localizing Datasets names and descriptions in search list
+                #  MULTILANG - Localizing Tags display names in Facet list
+                tags = odict['tags']
+                for tag in tags:
+                    localized_tag = TagMultilang.by_tag_id(tag.get('id'), lang)
+
+                    if localized_tag:
+                        tag['display_name'] = localized_tag.text
+
+                #  MULTILANG - Localizing package sub dict for the dataset read page
+                q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == odict['id'], PackageMultilang.lang == lang).all() 
+
+                if q_results:
+                    for result in q_results:
+                        odict[result.field] = result.text
+                        if result.field == 'notes':
+                            odict['notes'] = result.text
+
+                #  MULTILANG - Localizing organization sub dict for the dataset read page
+                organization = odict.get('organization')
+                if organization:
+                    q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == organization.get('id'), GroupMultilang.lang == lang).all() 
+                    
                     if q_results:
                         for result in q_results:
-                            resource[result.field] = result.text
+                            organization[result.field] = result.text
+
+                    odict['organization'] = organization
+
+                #  MULTILANG - Localizing resources dict
+                resources = odict.get('resources')
+                if resources:
+                    for resource in resources:
+                        q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource.get('id'), ResourceMultilang.lang == lang).all()
+                
+                        if q_results:
+                            for result in q_results:
+                                resource[result.field] = result.text
 
         return odict
 
     def after_search(self, search_results, search_params):
-        lang = get_lang()[0]
         search_facets = search_results.get('search_facets')
 
-        if search_facets:
-            #  MULTILANG - Localizing Tags display names in Facet list
-            tags = search_facets.get('tags')
-            for tag in tags.get('items'):
-                localized_tag = TagMultilang.by_name(tag.get('name'), lang)
+        if search_facets and get_lang():
+            lang = get_lang()[0]
 
-                if localized_tag:
-                    tag['display_name'] = localized_tag.text
+            if 'tags' in search_facets:
+                #  MULTILANG - Localizing Tags display names in Facet list
+                tags = search_facets.get('tags')
+                for tag in tags.get('items'):
+                    localized_tag = TagMultilang.by_name(tag.get('name'), lang)
+
+                    if localized_tag:
+                        tag['display_name'] = localized_tag.text
             
-            #  MULTILANG - Localizing Organizations display names in Facet list
-            organizations = search_facets.get('organization')
-            for org in organizations.get('items'):
-                q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.name == org.get('name'), GroupMultilang.lang == lang).all() 
+            if 'organization' in search_facets:
+                #  MULTILANG - Localizing Organizations display names in Facet list
+                organizations = search_facets.get('organization')
+                for org in organizations.get('items'):
+                    q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.name == org.get('name'), GroupMultilang.lang == lang).all() 
 
-                if q_results:
-                    for result in q_results:
-                        if result.field == 'title':
-                            org['display_name'] = result.text
+                    if q_results:
+                        for result in q_results:
+                            if result.field == 'title':
+                                org['display_name'] = result.text
 
-            #  MULTILANG - Localizing Groups display names in Facet list
-            groups = search_facets.get('groups')
-            for group in groups.get('items'):
-                q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.name == group.get('name'), GroupMultilang.lang == lang).all() 
+            if 'groups' in search_facets:
+                #  MULTILANG - Localizing Groups display names in Facet list
+                groups = search_facets.get('groups')
+                for group in groups.get('items'):
+                    q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.name == group.get('name'), GroupMultilang.lang == lang).all() 
 
-                if q_results:
-                    for result in q_results:
-                        if result.field == 'title':
-                            group['display_name'] = result.text
+                    if q_results:
+                        for result in q_results:
+                            if result.field == 'title':
+                                group['display_name'] = result.text
 
         search_results['search_facets'] = search_facets
         return search_results
@@ -163,14 +168,13 @@ class MultilangPlugin(plugins.SingletonPlugin):
     ## ##############
     def create(self, model_obj):
         otype = model_obj.type
-        lang = get_lang()[0]
 
         ## CREATE GROUP OR ORGANIZATION
-        if otype == 'group' or otype == 'organization':
-            group = model_dictize.group_dictize(model_obj, {'model': model, 'session': model.Session})
-
+        if otype == 'group' or otype == 'organization' and get_lang():
             log.info('::::: Persisting localised metadata locale :::::')
             lang = get_lang()[0]
+
+            group = model_dictize.group_dictize(model_obj, {'model': model, 'session': model.Session})
 
             session = model.Session
             try:
@@ -193,10 +197,11 @@ class MultilangPlugin(plugins.SingletonPlugin):
     ## ##############
     def edit(self, model_obj):     
         otype = model_obj.type
-        lang = get_lang()[0]
 
         ## EDIT GROUP OR ORGANIZATION
-        if otype == 'group' or otype == 'organization':
+        if otype == 'group' or otype == 'organization' and get_lang():
+            lang = get_lang()[0]
+
             group = model_dictize.group_dictize(model_obj, {'model': model, 'session': model.Session})
 
             q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == group.get('id')).all()
@@ -248,21 +253,25 @@ class MultilangPlugin(plugins.SingletonPlugin):
     def delete(self, model_obj):
         log.info('<<<<<<<<<<<<<<<<<^^^^^^^^^DELETE^^^^^^^^^^>>>>>>>>>>>>>>>>>>>>>>')
 
-    def before_show(self, resource_dict):        
-        lang = get_lang()[0]
-        
-        #  MULTILANG - Localizing resources dict
-        q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource_dict.get('id'), ResourceMultilang.lang == lang).all()
+    def before_show(self, resource_dict):
+        if get_lang():
+            lang = get_lang()[0]
+            
+            #  MULTILANG - Localizing resources dict
+            q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource_dict.get('id'), ResourceMultilang.lang == lang).all()
 
-        if q_results:
-            for result in q_results:
-                resource_dict[result.field] = result.text
+            if q_results:
+                for result in q_results:
+                    resource_dict[result.field] = result.text
+
+        return resource_dict
 
     def after_update(self, context, resource):
         otype = resource.get('type')
-        lang = get_lang()[0]
 
-        if otype != 'dataset':
+        if otype != 'dataset' and get_lang():
+            lang = get_lang()[0]
+
             r = model.Session.query(model.Resource).filter(model.Resource.id == resource.get('id')).all()
             if r:
                 #  MULTILANG - persisting resource localized record in multilang table
@@ -291,9 +300,10 @@ class MultilangPlugin(plugins.SingletonPlugin):
 
     def after_create(self, context, resource):
         otype = resource.get('type')
-        lang = get_lang()[0]
 
-        if otype != 'dataset':
+        if otype != 'dataset' and get_lang():
+            lang = get_lang()[0]
+
             #  MULTILANG - Creating new resource for multilang table
             r = model.Session.query(model.Resource).filter(model.Resource.id == resource.get('id')).all()
             if r:
