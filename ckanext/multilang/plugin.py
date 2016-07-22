@@ -66,10 +66,9 @@ class MultilangPlugin(plugins.SingletonPlugin):
 
     def before_view(self, odict):        
         otype = odict.get('type')
+        lang = helpers.getLanguage()
 
-        if get_lang():
-            lang = get_lang()[0]
-
+        if lang:
             if otype == 'group' or otype == 'organization':
                 #  MULTILANG - Localizing Group/Organizzation names and descriptions in search list
                 q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == odict.get('id'), GroupMultilang.lang == lang).all() 
@@ -125,10 +124,9 @@ class MultilangPlugin(plugins.SingletonPlugin):
 
     def after_search(self, search_results, search_params):
         search_facets = search_results.get('search_facets')
+        lang = helpers.getLanguage()
 
-        if search_facets and get_lang():
-            lang = get_lang()[0]
-
+        if search_facets and lang:
             if 'tags' in search_facets:
                 #  MULTILANG - Localizing Tags display names in Facet list
                 tags = search_facets.get('tags')
@@ -168,11 +166,12 @@ class MultilangPlugin(plugins.SingletonPlugin):
     ## ##############
     def create(self, model_obj):
         otype = model_obj.type
+        lang = helpers.getLanguage()
 
         ## CREATE GROUP OR ORGANIZATION
-        if otype == 'group' or otype == 'organization' and get_lang():
+        if otype == 'group' or otype == 'organization' and lang:
             log.info('::::: Persisting localised metadata locale :::::')
-            lang = get_lang()[0]
+            lang = helpers.getLanguage()
 
             group = model_dictize.group_dictize(model_obj, {'model': model, 'session': model.Session})
 
@@ -197,11 +196,10 @@ class MultilangPlugin(plugins.SingletonPlugin):
     ## ##############
     def edit(self, model_obj):     
         otype = model_obj.type
+        lang = helpers.getLanguage()
 
         ## EDIT GROUP OR ORGANIZATION
-        if otype == 'group' or otype == 'organization' and get_lang():
-            lang = get_lang()[0]
-
+        if otype == 'group' or otype == 'organization' and lang:
             group = model_dictize.group_dictize(model_obj, {'model': model, 'session': model.Session})
 
             q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == group.get('id')).all()
@@ -254,9 +252,8 @@ class MultilangPlugin(plugins.SingletonPlugin):
         log.info('<<<<<<<<<<<<<<<<<^^^^^^^^^DELETE^^^^^^^^^^>>>>>>>>>>>>>>>>>>>>>>')
 
     def before_show(self, resource_dict):
-        if get_lang():
-            lang = get_lang()[0]
-            
+        lang = helpers.getLanguage()
+        if lang:            
             #  MULTILANG - Localizing resources dict
             q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource_dict.get('id'), ResourceMultilang.lang == lang).all()
 
@@ -268,10 +265,9 @@ class MultilangPlugin(plugins.SingletonPlugin):
 
     def after_update(self, context, resource):
         otype = resource.get('type')
+        lang = helpers.getLanguage()
 
-        if otype != 'dataset' and get_lang():
-            lang = get_lang()[0]
-
+        if otype != 'dataset' and lang:
             r = model.Session.query(model.Resource).filter(model.Resource.id == resource.get('id')).all()
             if r:
                 #  MULTILANG - persisting resource localized record in multilang table
@@ -300,10 +296,9 @@ class MultilangPlugin(plugins.SingletonPlugin):
 
     def after_create(self, context, resource):
         otype = resource.get('type')
+        lang = helpers.getLanguage()
 
-        if otype != 'dataset' and get_lang():
-            lang = get_lang()[0]
-
+        if otype != 'dataset' and lang:
             #  MULTILANG - Creating new resource for multilang table
             r = model.Session.query(model.Resource).filter(model.Resource.id == resource.get('id')).all()
             if r:

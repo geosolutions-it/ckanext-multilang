@@ -14,10 +14,18 @@ from ckanext.multilang.model import PackageMultilang, GroupMultilang, TagMultila
 
 log = logging.getLogger(__file__)
 
+def getLanguage():
+    lang = get_lang()
+    
+    if lang is not None:
+        lang = unicode(lang[0])        
+    
+    return lang
+
 def get_localized_pkg(pkg_dict):
     if pkg_dict != '' and 'type' in pkg_dict:
         #  MULTILANG - Localizing package dict
-        lang = get_lang()[0]
+        lang = getLanguage()
 
         #  MULTILANG - Localizing Tags display names in Facet list
         tags = pkg_dict['tags']
@@ -49,7 +57,7 @@ def get_localized_pkg(pkg_dict):
 def get_localized_group(org_dict):
     #  MULTILANG - Localizing group dict
     if org_dict != '' and 'type' in org_dict:
-        lang = get_lang()[0]
+        lang = getLanguage()
         
         q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == org_dict.get('id'), GroupMultilang.lang == lang).all()
 
@@ -63,7 +71,7 @@ def get_localized_group(org_dict):
 
 def get_localized_resource(resource_dict):
     #  MULTILANG - Localizing resource dict
-    lang = get_lang()[0]
+    lang = getLanguage()
 
     q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource_dict.get('id'), ResourceMultilang.lang == lang).all()
 

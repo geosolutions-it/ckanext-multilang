@@ -9,6 +9,8 @@ from ckanext.multilang.model import GroupMultilang
 
 import ckan.lib as lib
 
+import ckanext.multilang.helpers as helpers
+
 _check_access = logic.check_access
 _unpick_search = get._unpick_search
 _or_ = sqlalchemy.or_
@@ -152,7 +154,7 @@ def _group_or_org_list(context, data_dict, is_org=False):
         q = u'%{0}%'.format(q)
         
         ## MULTILANG FRAGMENT
-        lang = get_lang()[0]
+        lang = helpers.getLanguage()
         groups_multilang_id_list = []
 
         q_results = model.Session.query(GroupMultilang).filter(

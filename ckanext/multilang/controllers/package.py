@@ -7,6 +7,7 @@ import ckan.logic as logic
 import ckan.lib.base as base
 import ckan.plugins as p
 import ckan.lib.maintain as maintain
+import ckanext.multilang.helpers as helpers
 
 from pylons import config
 
@@ -164,7 +165,7 @@ class MultilangPackageController(PackageController):
 
             pkg_dict = get_action('package_create')(context, data_dict)
 
-            lang = get_lang()[0]
+            lang = helpers.getLanguage()
 
             #  MULTILANG - persisting tags
             self.localized_tags_persist(extra_tag, pkg_dict, lang)
@@ -242,7 +243,7 @@ class MultilangPackageController(PackageController):
             c.pkg = context['package']
             c.pkg_dict = pkg
 
-            lang = get_lang()[0]
+            lang = helpers.getLanguage()
 
             #  MULTILANG - persisting tags
             self.localized_tags_persist(extra_tag, c.pkg_dict, lang)
