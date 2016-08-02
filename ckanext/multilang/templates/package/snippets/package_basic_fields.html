@@ -38,10 +38,21 @@
 {% endblock %}
 
 {% block package_basic_fields_org %}
-  {{ super() }}
+  {# if we have a default group then this wants remembering #}
+  {% if data.group_id %}
+    <input type="hidden" name="groups__0__id" value="{{ data.group_id }}" />
+  {% endif %}
 
+  {% set dataset_is_draft = data.get('state', 'draft').startswith('draft') or data.get('state', 'none') ==  'none' %}
+  {% set dataset_has_organization = data.owner_org or data.group_id %}
   {% set organizations_available = h.organizations_available('create_dataset') %}
+  {% set user_is_sysadmin = h.check_access('sysadmin') %}
   {% set show_organizations_selector = organizations_available %}
+  {% set show_visibility_selector = dataset_has_organization or (organizations_available and (user_is_sysadmin or dataset_is_draft)) %}
+
+  {% if show_organizations_selector and show_visibility_selector %}
+    <div data-module="dataset-visibility">
+  {% endif %}
 
   {% if show_organizations_selector %}
     {% set existing_org = data.owner_org or data.group_id %}
@@ -64,4 +75,37 @@
       </div>
     </div>
   {% endif %}
+
+  {% if show_visibility_selector %}
+    {% block package_metadata_fields_visibility %}
+      <div class="control-group">
+        <label for="field-private" class="control-label">{{ _('Visibility') }}</label>
+        <div class="controls">
+          <select id="field-private" name="private">
+            {% for option in [('True', _('Private')), ('False', _('Public'))] %}
+            <option value="{{ option[0] }}" {% if option[0] == data.private|trim %}selected="selected"{% endif %}>{{ option[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    {% endblock %}
+  {% endif %}
+
+  {% if show_organizations_selector and show_visibility_selector %}
+    </div>
+  {% endif %}
+
+
+  {% if data.id and h.check_access('package_delete', {'id': data.id}) and data.state != 'active' %}
+    <div class="control-group">
+      <label for="field-state" class="control-label">{{ _('State') }}</label>
+      <div class="controls">
+        <select id="field-state" name="state">
+          <option value="active" {% if data.get('state', 'none') == 'active' %} selected="selected" {% endif %}>{{ _('Active') }}</option>
+          <option value="deleted" {% if data.get('state', 'none') == 'deleted' %} selected="selected" {% endif %}>{{ _('Deleted') }}</option>
+        </select>
+      </div>
+    </div>
+  {% endif %}
+
 {% endblock %}
