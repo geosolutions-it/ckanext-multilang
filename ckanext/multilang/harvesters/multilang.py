@@ -138,7 +138,7 @@ ISOKeyword.elements.append(
 
 class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
-    _package_dict = None 
+    _package_dict = {} 
 
     _ckan_locales_mapping = {
         'ita': 'it',
@@ -352,7 +352,7 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
     def after_import_stage(self, package_dict):        
         log.info('::::::::: Performing after_import_stage  persist operation for localised dataset content :::::::::')
 
-        if self._package_dict:            
+        if bool(self._package_dict):            
             session = Session
 
             package_id = package_dict.get('id')
@@ -366,19 +366,25 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
                     
                     log.debug('::::: Persisting default metadata locale :::::')
 
-                    log.debug('::::: Persisting tile locales :::::')
-                    for title in self._package_dict.get('localised_titles'):
-                        session.add_all([
-                            PackageMultilang(package_id=package_id, field='title', field_type='localized', lang=title.get('locale'), text=title.get('text')),
-                        ])
+                    loc_titles = self._package_dict.get('localised_titles')
+                    if loc_titles:
+                        log.debug('::::: Persisting title locales :::::')
+                        for title in loc_titles:
+                            session.add_all([
+                                PackageMultilang(package_id=package_id, field='title', field_type='localized', lang=title.get('locale'), text=title.get('text')),
+                            ])
 
-                    log.debug('::::: Persisting abstract locales :::::')
-                    for abstract in self._package_dict.get('localised_abstracts'):
-                        session.add_all([
-                            PackageMultilang(package_id=package_id, field='notes', field_type='localized', lang=abstract.get('locale'), text=abstract.get('text')),
-                        ])
+                        session.commit()
 
-                    session.commit()
+                    loc_abstracts = self._package_dict.get('localised_abstracts')
+                    if loc_abstracts:
+                        log.debug('::::: Persisting abstract locales :::::')
+                        for abstract in loc_abstracts:
+                            session.add_all([
+                                PackageMultilang(package_id=package_id, field='notes', field_type='localized', lang=abstract.get('locale'), text=abstract.get('text')),
+                            ])
+
+                        session.commit()
 
                     log.info('::::::::: OBJECT PERSISTED SUCCESSFULLY :::::::::')
 
@@ -387,14 +393,16 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
                     for row in rows:
                         if row.field == 'title': 
                             titles = self._package_dict.get('localised_titles')
-                            for title in titles:
-                                if title.get('locale') == row.lang:
-                                    row.text = title.get('text')
+                            if titles:
+                                for title in titles:
+                                    if title.get('locale') == row.lang:
+                                        row.text = title.get('text')
                         elif row.field == 'notes': 
                             abstracts = self._package_dict.get('localised_abstracts')
-                            for abstract in abstracts:
-                                if abstract.get('locale') == row.lang:
-                                    row.text = abstract.get('text')
+                            if abstracts:
+                                for abstract in abstracts:
+                                    if abstract.get('locale') == row.lang:
+                                        row.text = abstract.get('text')
 
                         row.save()
 
@@ -411,32 +419,35 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
             # Persisting localized Tags
             try:
-                for tag in self._package_dict.get('localized_tags'):
-                    tag_name = tag.get('text')
-                    tag_lang = tag.get('locale')
-                    tag_localized_name = tag.get('localized_text')
+                loc_tags = self._package_dict.get('localized_tags')
+                if loc_tags:
+                    log.debug('::::: Persisting tag locales :::::')
+                    for tag in loc_tags:
+                        tag_name = tag.get('text')
+                        tag_lang = tag.get('locale')
+                        tag_localized_name = tag.get('localized_text')
 
-                    tag = TagMultilang.by_name(tag_name, tag_lang)
+                        tag = TagMultilang.by_name(tag_name, tag_lang)
 
-                    if tag:
-                        # Update the existing record                        
-                        if tag_localized_name and tag_localized_name != tag.text:
-                            tag.text = tag_localized_name
-                            tag.save()
+                        if tag:
+                            # Update the existing record                        
+                            if tag_localized_name and tag_localized_name != tag.text:
+                                tag.text = tag_localized_name
+                                tag.save()
 
-                            log.info('::::::::: OBJECT TAG UPDATED SUCCESSFULLY :::::::::') 
-                    else:
-                        # Create a new localized record
-                        existing_tag = model.Tag.by_name(tag_name)
+                                log.info('::::::::: OBJECT TAG UPDATED SUCCESSFULLY :::::::::') 
+                        else:
+                            # Create a new localized record
+                            existing_tag = model.Tag.by_name(tag_name)
 
-                        if existing_tag:
-                            session.add_all([
-                                TagMultilang(tag_id=existing_tag.id, tag_name=tag_name, lang=tag_lang, text=tag_localized_name),
-                            ])
+                            if existing_tag:
+                                session.add_all([
+                                    TagMultilang(tag_id=existing_tag.id, tag_name=tag_name, lang=tag_lang, text=tag_localized_name),
+                                ])
 
-                            log.info('::::::::: OBJECT TAG PERSISTED SUCCESSFULLY :::::::::')
+                                log.info('::::::::: OBJECT TAG PERSISTED SUCCESSFULLY :::::::::')
 
-                        session.commit()
+                            session.commit()
                 pass
             except Exception, e:
                 # on rollback, the same closure of state
