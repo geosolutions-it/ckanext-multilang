@@ -71,7 +71,8 @@ class MultilangPlugin(plugins.SingletonPlugin):
         if lang:
             if otype == 'group' or otype == 'organization':
                 #  MULTILANG - Localizing Group/Organizzation names and descriptions in search list
-                q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == odict.get('id'), GroupMultilang.lang == lang).all() 
+                # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == odict.get('id'), GroupMultilang.lang == lang).all()
+                q_results = GroupMultilang.get_for_group_id_and_lang(odict.get('id'), lang) 
 
                 if q_results:
                     for result in q_results:
@@ -91,7 +92,8 @@ class MultilangPlugin(plugins.SingletonPlugin):
                         tag['display_name'] = localized_tag.text
 
                 #  MULTILANG - Localizing package sub dict for the dataset read page
-                q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == odict['id'], PackageMultilang.lang == lang).all() 
+                # q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == odict['id'], PackageMultilang.lang == lang).all()
+                q_results = PackageMultilang.get_for_package_id_and_lang(odict.get('id'), lang) 
 
                 if q_results:
                     for result in q_results:
@@ -102,7 +104,8 @@ class MultilangPlugin(plugins.SingletonPlugin):
                 #  MULTILANG - Localizing organization sub dict for the dataset read page
                 organization = odict.get('organization')
                 if organization:
-                    q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == organization.get('id'), GroupMultilang.lang == lang).all() 
+                    # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == organization.get('id'), GroupMultilang.lang == lang).all() 
+                    q_results = GroupMultilang.get_for_group_id_and_lang(organization.get('id'), lang)
                     
                     if q_results:
                         for result in q_results:
@@ -114,7 +117,8 @@ class MultilangPlugin(plugins.SingletonPlugin):
                 resources = odict.get('resources')
                 if resources:
                     for resource in resources:
-                        q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource.get('id'), ResourceMultilang.lang == lang).all()
+                        # q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource.get('id'), ResourceMultilang.lang == lang).all()
+                        q_results = ResourceMultilang.get_for_resource_id_and_lang(resource.get('id'), lang)
                 
                         if q_results:
                             for result in q_results:
@@ -140,7 +144,8 @@ class MultilangPlugin(plugins.SingletonPlugin):
                 #  MULTILANG - Localizing Organizations display names in Facet list
                 organizations = search_facets.get('organization')
                 for org in organizations.get('items'):
-                    q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.name == org.get('name'), GroupMultilang.lang == lang).all() 
+                    # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.name == org.get('name'), GroupMultilang.lang == lang).all()
+                    q_results = GroupMultilang.get_for_group_name_and_lang(org.get('name'), lang) 
 
                     if q_results:
                         for result in q_results:
@@ -151,7 +156,8 @@ class MultilangPlugin(plugins.SingletonPlugin):
                 #  MULTILANG - Localizing Groups display names in Facet list
                 groups = search_facets.get('groups')
                 for group in groups.get('items'):
-                    q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.name == group.get('name'), GroupMultilang.lang == lang).all() 
+                    # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.name == group.get('name'), GroupMultilang.lang == lang).all()
+                    q_results = GroupMultilang.get_for_group_name_and_lang(group.get('name'), lang)
 
                     if q_results:
                         for result in q_results:
@@ -175,21 +181,7 @@ class MultilangPlugin(plugins.SingletonPlugin):
 
             group = model_dictize.group_dictize(model_obj, {'model': model, 'session': model.Session})
 
-            session = model.Session
-            try:
-                session.add_all([
-                    GroupMultilang(group_id=group.get('id'), name=group.get('name'), field='title', lang=lang, text=group.get('title')),
-                    GroupMultilang(group_id=group.get('id'), name=group.get('name'), field='description', lang=lang, text=group.get('description')),
-                ])
-
-                session.commit()
-            except Exception, e:
-                # on rollback, the same closure of state
-                # as that of commit proceeds. 
-                session.rollback()
-
-                log.error('Exception occurred while persisting DB objects: %s', e)
-                raise
+            GroupMultilang.persist(group, lang)
 
     ## ##############
     ## EDIT
@@ -202,7 +194,8 @@ class MultilangPlugin(plugins.SingletonPlugin):
         if otype == 'group' or otype == 'organization' and lang:
             group = model_dictize.group_dictize(model_obj, {'model': model, 'session': model.Session})
 
-            q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == group.get('id')).all()
+            # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == group.get('id')).all()
+            q_results = GroupMultilang.get_for_group_id(group.get('id'))
 
             create_new = False
             if q_results:
@@ -229,33 +222,20 @@ class MultilangPlugin(plugins.SingletonPlugin):
 
             if create_new == True:
                 log.info(':::::::::::: Localized fields are missing in package_multilang table, persisting defaults using values in the table group :::::::::::::::')
-                session = model.Session
-                try:
-                    session.add_all([
-                        GroupMultilang(group_id=group.get('id'), name=group.get('name'), field='title', lang=lang, text=group.get('title')),
-                        GroupMultilang(group_id=group.get('id'), name=group.get('name'), field='description', lang=lang, text=group.get('description')),
-                    ])
-
-                    session.commit()
-                except Exception, e:
-                    # on rollback, the same closure of state
-                    # as that of commit proceeds. 
-                    session.rollback()
-
-                    log.error('Exception occurred while persisting DB objects: %s', e)
-                    raise
+                GroupMultilang.persist(group, lang)
         
     ## ##############
     ## DELETE
     ## ##############
     def delete(self, model_obj):
-        log.info('<<<<<<<<<<<<<<<<<^^^^^^^^^DELETE^^^^^^^^^^>>>>>>>>>>>>>>>>>>>>>>')
+        return model_obj
 
     def before_show(self, resource_dict):
         lang = helpers.getLanguage()
         if lang:            
             #  MULTILANG - Localizing resources dict
-            q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource_dict.get('id'), ResourceMultilang.lang == lang).all()
+            # q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource_dict.get('id'), ResourceMultilang.lang == lang).all()
+            q_results = ResourceMultilang.get_for_resource_id_and_lang(resource_dict.get('id'), lang)
 
             if q_results:
                 for result in q_results:
@@ -268,31 +248,19 @@ class MultilangPlugin(plugins.SingletonPlugin):
         lang = helpers.getLanguage()
 
         if otype != 'dataset' and lang:
-            r = model.Session.query(model.Resource).filter(model.Resource.id == resource.get('id')).all()
+            # r = model.Session.query(model.Resource).filter(model.Resource.id == resource.get('id')).all()
+            r = model.Resource.get(resource.get('id'))
             if r:
-                #  MULTILANG - persisting resource localized record in multilang table
-                q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource.get('id'), ResourceMultilang.lang == lang).all()
+                # MULTILANG - persisting resource localized record in multilang table
+                # q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource.get('id'), ResourceMultilang.lang == lang).all()
+                q_results = ResourceMultilang.get_for_resource_id_and_lang(resource.get('id'), lang)
                 if q_results:
                     for result in q_results:
                         result.text = resource.get(result.field)
                         result.save()
                 else:
                     log.info('Localised fields are missing in resource_multilang table, persisting ...')
-                    session = model.Session
-                    try:
-                        session.add_all([
-                            ResourceMultilang(resource_id=resource.get('id'), field='name', lang=lang, text=resource.get('name')),
-                            ResourceMultilang(resource_id=resource.get('id'), field='description', lang=lang, text=resource.get('description')),
-                        ])
-
-                        session.commit()
-                    except Exception, e:
-                        # on rollback, the same closure of state
-                        # as that of commit proceeds. 
-                        session.rollback()
-
-                        log.error('Exception occurred while persisting DB objects: %s', e)
-                        raise
+                    ResourceMultilang.persist(resource, lang)
 
     def after_create(self, context, resource):
         otype = resource.get('type')
@@ -300,23 +268,10 @@ class MultilangPlugin(plugins.SingletonPlugin):
 
         if otype != 'dataset' and lang:
             #  MULTILANG - Creating new resource for multilang table
-            r = model.Session.query(model.Resource).filter(model.Resource.id == resource.get('id')).all()
+            # r = model.Session.query(model.Resource).filter(model.Resource.id == resource.get('id')).all()
+            r = model.Resource.get(resource.get('id'))
             if r:
                 log.info('Localised fields are missing in resource_multilang table, persisting ...')
-                session = model.Session
-                try:
-                    session.add_all([
-                        ResourceMultilang(resource_id=resource.get('id'), field='name', lang=lang, text=resource.get('name')),
-                        ResourceMultilang(resource_id=resource.get('id'), field='description', lang=lang, text=resource.get('description')),
-                    ])
-
-                    session.commit()
-                except Exception, e:
-                    # on rollback, the same closure of state
-                    # as that of commit proceeds. 
-                    session.rollback()
-
-                    log.error('Exception occurred while persisting DB objects: %s', e)
-                    raise
+                ResourceMultilang.persist(resource, lang)
 
 

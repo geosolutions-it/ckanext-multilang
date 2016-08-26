@@ -94,20 +94,7 @@ class MultilangPackageController(PackageController):
                             tag_id = dict_tag.get('id')
 
                     if tag_id:
-                        session = model.Session
-                        try:
-                            session.add_all([
-                                TagMultilang(tag_id=tag_id, tag_name=tag.get('key'), lang=lang, text=tag.get('value')),
-                            ])
-
-                            session.commit()
-                        except Exception, e:
-                            # on rollback, the same closure of state
-                            # as that of commit proceeds. 
-                            session.rollback()
-
-                            log.error('Exception occurred while persisting DB objects: %s', e)
-                            raise
+                        TagMultilang.persist({'id': tag_id, 'name': tag.get('key'), 'text': tag.get('value')}, lang)
 
     def _save_new(self, context, package_type=None):
         # The staged add dataset used the new functionality when the dataset is
@@ -172,13 +159,9 @@ class MultilangPackageController(PackageController):
 
             # MULTILANG - persisting the localized package dict
             log.info('::::: Persisting localised metadata locale :::::')
-            pkg_to_persist = []
             for field in self.pkg_localized_fields:
                 if pkg_dict.get(field):
-                    pkg_to_persist.append(PackageMultilang(package_id=pkg_dict.get('id'), field=field, field_type='localized', lang=lang, text=pkg_dict.get(field)))
-            
-            if len(pkg_to_persist) > 0:
-                self.persistPackageMultilangs(pkg_to_persist)
+                    PackageMultilang.persist({'id': pkg_dict.get('id'), 'field': field, 'text': pkg_dict.get(field)}, lang)
 
             if ckan_phase:
                 # redirect to add dataset resources
@@ -251,7 +234,8 @@ class MultilangPackageController(PackageController):
             #  MULTILANG - persisting package dict
             log.info(':::::::::::: Saving the corresponding localized title and abstract :::::::::::::::')
             
-            q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == c.pkg_dict.get('id'), PackageMultilang.lang == lang).all()
+            # q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == c.pkg_dict.get('id'), PackageMultilang.lang == lang).all()
+            q_results = PackageMultilang.get_for_package_id_and_lang(c.pkg_dict.get('id'), lang) 
             
             if q_results:
                 pkg_processed_field = []
@@ -263,24 +247,15 @@ class MultilangPackageController(PackageController):
                     result.save()
 
                 ## Check for missing localized fields in DB
-                obj_to_persist = []
                 for field in self.pkg_localized_fields:
                     if field not in pkg_processed_field:
                         if c.pkg_dict.get(field):
-                            obj_to_persist.append(PackageMultilang(package_id=c.pkg_dict.get('id'), field=field, field_type='localized', lang=lang, text=c.pkg_dict.get(field)))
-
-                if len(obj_to_persist) > 0:
-                    self.persistPackageMultilangs(obj_to_persist)
-
+                            PackageMultilang.persist({'id': c.pkg_dict.get('id'), 'field': field, 'text': c.pkg_dict.get(field)}, lang)
             else:
                 log.info(':::::::::::: Localised fields are missing in package_multilang table, persisting defaults using values in the table package :::::::::::::::')
-                pkg_to_persist = []
                 for field in self.pkg_localized_fields:
                     if c.pkg_dict.get(field):
-                        pkg_to_persist.append(PackageMultilang(package_id=c.pkg_dict.get('id'), field=field, field_type='localized', lang=lang, text=c.pkg_dict.get(field)))
-                
-                if len(pkg_to_persist) > 0:
-                    self.persistPackageMultilangs(pkg_to_persist)
+                        PackageMultilang.persist({'id': c.pkg_dict.get('id'), 'field': field, 'text': c.pkg_dict.get(field)}, lang)
 
             self._form_save_redirect(pkg['name'], 'edit', package_type=package_type)
         except NotAuthorized:
@@ -299,17 +274,3 @@ class MultilangPackageController(PackageController):
             errors = e.error_dict
             error_summary = e.error_summary
             return self.edit(name_or_id, data_dict, errors, error_summary)
-
-    def persistPackageMultilangs(self, pkg_list):
-        if len(pkg_list) > 0:
-            session = model.Session
-            try:
-                session.add_all(pkg_list)
-                session.commit()
-            except Exception, e:
-                # on rollback, the same closure of state
-                # as that of commit proceeds. 
-                session.rollback()
-
-                log.error('Exception occurred while persisting DB objects: %s', e)
-                raise
