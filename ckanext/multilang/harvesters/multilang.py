@@ -220,12 +220,13 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
                 tag_localized_entry = tag_entry["keyword-name-localized"]
 
                 #Getting keyword for default metadata locale
-                for keyword in tag_entry['keyword']:      
-                    localized_tags.append({
-                        'text': keyword,
-                        'localized_text': keyword,
-                        'locale': self._ckan_locales_mapping[iso_values["metadata-language"].lower()]
-                    })
+                for keyword in tag_entry['keyword']:
+                    if iso_values["metadata-language"].lower() in self._ckan_locales_mapping: 
+                        localized_tags.append({
+                            'text': keyword,
+                            'localized_text': keyword,
+                            'locale': self._ckan_locales_mapping[iso_values["metadata-language"].lower()]
+                        })
 
                 for tag_localized in tag_localized_entry:
                     if tag_localized['text'] and tag_localized['locale'].lower()[1:]:
