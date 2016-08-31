@@ -2,6 +2,7 @@ import logging
 import ckan.logic as logic
 import ckan.logic.action.get as get
 import sqlalchemy
+import ckan.plugins.toolkit as toolkit
 
 from paste.deploy.converters import asbool
 from pylons.i18n import get_lang
@@ -20,6 +21,7 @@ ValidationError = logic.ValidationError
 
 log = logging.getLogger(__file__)
 
+@toolkit.side_effect_free
 def group_list(context, data_dict):
     '''Return a list of the names of the site's groups.
 
@@ -56,6 +58,7 @@ def group_list(context, data_dict):
     _check_access('group_list', context, data_dict)
     return _group_or_org_list(context, data_dict)
 
+@toolkit.side_effect_free
 def organization_list(context, data_dict):
     '''Return a list of the names of the site's organizations.
 
