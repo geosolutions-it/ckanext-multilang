@@ -84,12 +84,13 @@ class MultilangPlugin(plugins.SingletonPlugin):
             elif otype == 'dataset':
                 #  MULTILANG - Localizing Datasets names and descriptions in search list
                 #  MULTILANG - Localizing Tags display names in Facet list
-                tags = odict['tags']
-                for tag in tags:
-                    localized_tag = TagMultilang.by_tag_id(tag.get('id'), lang)
+                tags = odict.get('tags')
+                if tags:
+                    for tag in tags:
+                        localized_tag = TagMultilang.by_tag_id(tag.get('id'), lang)
 
-                    if localized_tag:
-                        tag['display_name'] = localized_tag.text
+                        if localized_tag:
+                            tag['display_name'] = localized_tag.text
 
                 #  MULTILANG - Localizing package sub dict for the dataset read page
                 # q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == odict['id'], PackageMultilang.lang == lang).all()

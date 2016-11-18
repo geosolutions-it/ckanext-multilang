@@ -28,12 +28,13 @@ def get_localized_pkg(pkg_dict):
         lang = getLanguage()
 
         #  MULTILANG - Localizing Tags display names in Facet list
-        tags = pkg_dict['tags']
-        for tag in tags:
-            localized_tag = TagMultilang.by_name(tag.get('name'), lang)
+        tags = pkg_dict.get('tags')
+        if tags:
+            for tag in tags:
+                localized_tag = TagMultilang.by_name(tag.get('name'), lang)
 
-            if localized_tag:
-                tag['display_name'] = localized_tag.text
+                if localized_tag:
+                    tag['display_name'] = localized_tag.text
 
         # q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == pkg_dict.get('id'), PackageMultilang.lang == lang).all()
         q_results = PackageMultilang.get_for_package_id_and_lang(pkg_dict.get('id'), lang) 
