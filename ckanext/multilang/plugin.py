@@ -252,16 +252,18 @@ class MultilangPlugin(plugins.SingletonPlugin):
             # r = model.Session.query(model.Resource).filter(model.Resource.id == resource.get('id')).all()
             r = model.Resource.get(resource.get('id'))
             if r:
+                r = model_dictize.resource_dictize(r, {'model': model, 'session': model.Session})
+
                 # MULTILANG - persisting resource localized record in multilang table
                 # q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource.get('id'), ResourceMultilang.lang == lang).all()
-                q_results = ResourceMultilang.get_for_resource_id_and_lang(resource.get('id'), lang)
-                if q_results:
+                q_results = ResourceMultilang.get_for_resource_id_and_lang(r.get('id'), lang)
+                if q_results and q_results.count() > 0:
                     for result in q_results:
-                        result.text = resource.get(result.field)
+                        result.text = r.get(result.field)
                         result.save()
                 else:
                     log.info('Localised fields are missing in resource_multilang table, persisting ...')
-                    ResourceMultilang.persist(resource, lang)
+                    ResourceMultilang.persist(r, lang)
 
     def after_create(self, context, resource):
         otype = resource.get('type')
