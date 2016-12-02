@@ -123,6 +123,12 @@ class PackageMultilang(DomainObject):
         self.text = text
 
     @classmethod
+    def get(self, pkg_id, field, pkg_lang, field_type):
+        obj = meta.Session.query(self).autoflush(False)
+        record = obj.filter_by(package_id=pkg_id, field=field, lang=pkg_lang, field_type=field_type).first()
+        return record
+
+    @classmethod
     def get_for_package(self, package_id):
         obj = meta.Session.query(self).autoflush(False)
         records = obj.filter(self.package_id == package_id).all()  
@@ -135,11 +141,11 @@ class PackageMultilang(DomainObject):
         return records
 
     @classmethod
-    def persist(self, package, lang):
+    def persist(self, package, lang, field_type='package'):
         session = meta.Session
         try:
             session.add_all([
-                PackageMultilang(package_id=package.get('id'), field=package.get('field'), field_type='localized', lang=lang, text=package.get('text')),
+                PackageMultilang(package_id=package.get('id'), field=package.get('field'), field_type=field_type, lang=lang, text=package.get('text')),
             ])
 
             session.commit()
