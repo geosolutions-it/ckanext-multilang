@@ -265,6 +265,18 @@ class TagMultilang(DomainObject):
         return tag
 
     @classmethod
+    def all_by_name(self, tag_name, autoflush=True):
+        query = meta.Session.query(TagMultilang).filter(TagMultilang.tag_name==tag_name)
+        query = query.autoflush(autoflush)
+        tags = query.all()
+
+        ret = {}
+        for record in tags:
+            ret[record.lang] = record.text
+
+        return ret
+
+    @classmethod
     def by_tag_id(self, tag_id, tag_lang, autoflush=True):
         query = meta.Session.query(TagMultilang).filter(TagMultilang.tag_id==tag_id, TagMultilang.lang==tag_lang)
         query = query.autoflush(autoflush)
