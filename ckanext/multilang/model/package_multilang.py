@@ -151,7 +151,7 @@ class PackageMultilang(DomainObject):
             session.commit()
         except Exception, e:
             # on rollback, the same closure of state
-            # as that of commit proceeds. 
+            # as that of commit proceeds.
             session.rollback()
 
             log.error('Exception occurred while persisting DB objects: %s', e)
@@ -219,6 +219,18 @@ class ResourceMultilang(DomainObject):
         self.text = text
     
     @classmethod
+    def get_for_pk(self, resource_id, field, lang):
+        obj = meta.Session.query(self).autoflush(False)
+        records = obj.filter_by(resource_id=resource_id, field=field, lang=lang).all()
+        if len(records) > 1:
+            log.error('Too many ResourceMultilang records: %s', records)
+            return records[0]
+        elif len(records) == 1:
+            return records[0]
+        else:
+            return None
+
+    @classmethod
     def get_for_resource_id(self, resource_id):
         obj = meta.Session.query(self).autoflush(False)
         records = obj.filter_by(resource_id=resource_id)
@@ -243,6 +255,20 @@ class ResourceMultilang(DomainObject):
         except Exception, e:
             # on rollback, the same closure of state
             # as that of commit proceeds. 
+            session.rollback()
+
+            log.error('Exception occurred while persisting DB objects: %s', e)
+            raise
+
+    @classmethod
+    def persist_resources(self, resources_list):
+        session = meta.Session
+        try:
+            session.add_all(resources_list)
+            session.commit()
+        except Exception, e:
+            # on rollback, the same closure of state
+            # as that of commit proceeds.
             session.rollback()
 
             log.error('Exception occurred while persisting DB objects: %s', e)
