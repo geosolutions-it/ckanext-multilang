@@ -3,11 +3,15 @@ import json
 
 import logging
 import ckan.lib.search as search
+import ckan.lib.dictization.model_dictize as model_dictize
+
+from ckanext.harvest.model import HarvestObject
 
 from ckan.lib.base import model
 from ckan.model import Session
 
 from ckanext.multilang.model import PackageMultilang, GroupMultilang, TagMultilang
+from ckan.model import Package
 
 from ckan.plugins.core import SingletonPlugin
 
@@ -134,11 +138,12 @@ ISOKeyword.elements.append(
 
 class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
-    _package_dict = None 
+    _package_dict = {} 
 
     _ckan_locales_mapping = {
         'ita': 'it',
-        'ger': 'de'
+        'ger': 'de',
+        'eng': 'en_GB'
     }
 
     def info(self):
@@ -215,12 +220,13 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
                 tag_localized_entry = tag_entry["keyword-name-localized"]
 
                 #Getting keyword for default metadata locale
-                for keyword in tag_entry['keyword']:      
-                    localized_tags.append({
-                        'text': keyword,
-                        'localized_text': keyword,
-                        'locale': self._ckan_locales_mapping[iso_values["metadata-language"].lower()]
-                    })
+                for keyword in tag_entry['keyword']:
+                    if iso_values["metadata-language"].lower() in self._ckan_locales_mapping: 
+                        localized_tags.append({
+                            'text': keyword,
+                            'localized_text': keyword,
+                            'locale': self._ckan_locales_mapping[iso_values["metadata-language"].lower()]
+                        })
 
                 for tag_localized in tag_localized_entry:
                     if tag_localized['text'] and tag_localized['locale'].lower()[1:]:
@@ -288,72 +294,85 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
                             log.debug("::::::::::::: Persisting localized ORG :::::::::::::")      
                             
-                            try: 
-                                session = Session
-                                rows = session.query(GroupMultilang).filter(GroupMultilang.group_id == organisation).all()
+                            # rows = session.query(GroupMultilang).filter(GroupMultilang.group_id == organisation).all()
+                            rows = GroupMultilang.get_for_group_id(organisation)
 
-                                for localized_entry in localized_org:
-                                    insert = True
-                                    for row in rows:
-                                        if row.lang == localized_entry.get("locale") and row.field == 'title':
-                                            # Updating the org localized record
-                                            row.text = localized_entry.get("text")
-                                            row.save()
-                                            insert = False
+                            for localized_entry in localized_org:
+                                insert = True
+                                for row in rows:
+                                    if row.lang == localized_entry.get("locale") and row.field == 'title':
+                                        # Updating the org localized record
+                                        row.text = localized_entry.get("text")
+                                        row.save()
+                                        insert = False
 
-                                            log.debug("::::::::::::: ORG locale successfully updated :::::::::::::") 
+                                        log.debug("::::::::::::: ORG locale successfully updated :::::::::::::") 
 
-                                    if insert:
-                                        # Inserting the missing org localized record
-                                        session.add_all([
-                                            GroupMultilang(group_id=organisation, name=existing_org.name, field='title', lang=localized_entry.get("locale"), text=localized_entry.get("text")),
-                                            GroupMultilang(group_id=organisation, name=existing_org.name, field='description', lang=localized_entry.get("locale"), text=localized_entry.get("text"))
-                                        ])
+                                if insert:
+                                    # Inserting the missing org localized record
+                                    org_dict = {
+                                        'id': organisation,
+                                        'name': existing_org.name,
+                                        'title': localized_entry.get("text"),
+                                        'description': localized_entry.get("text")
+                                    }
 
-                                        session.commit()
-                                        log.debug("::::::::::::: ORG locale successfully added :::::::::::::")
-
-                                pass
-                            except Exception, e:
-                                # on rollback, the same closure of state
-                                # as that of commit proceeds. 
-                                session.rollback()
-
-                                log.error('Exception occurred while persisting DB objects: %s', e)
-                                raise
+                                    GroupMultilang.persist(org_dict, localized_entry.get("locale"))
+                                    
+                                    log.debug("::::::::::::: ORG locale successfully added :::::::::::::")
 
         return organisation
+
+    def import_stage(self, harvest_object):
+        import_stage = super(MultilangHarvester, self).import_stage(harvest_object)
+
+        if import_stage == True:
+            # Get the existing HarvestObject
+            existing_object = model.Session.query(HarvestObject) \
+                    .filter(HarvestObject.guid==harvest_object.guid) \
+                    .filter(HarvestObject.current==True) \
+                    .first()
+
+            session = Session
+            
+            harvested_package = session.query(Package).filter(Package.id == existing_object.package_id).first()
+            
+            if harvested_package:
+                package_dict = model_dictize.package_dictize(harvested_package, {'model': model, 'session': session})
+                if package_dict:
+                    self.after_import_stage(package_dict)
+        
+        return import_stage
 
     def after_import_stage(self, package_dict):        
         log.info('::::::::: Performing after_import_stage  persist operation for localised dataset content :::::::::')
 
-        if self._package_dict:            
+        if bool(self._package_dict):
             session = Session
 
             package_id = package_dict.get('id')
             
             # Persisting localized packages 
             try:
-                rows = session.query(PackageMultilang).filter(PackageMultilang.package_id == package_id).all()
+                # rows = session.query(PackageMultilang).filter(PackageMultilang.package_id == package_id).all()
+                rows = PackageMultilang.get_for_package(package_id) 
 
                 if not rows:
                     log.info('::::::::: Adding new localised object to the package_multilang table :::::::::')
                     
                     log.debug('::::: Persisting default metadata locale :::::')
 
-                    log.debug('::::: Persisting tile locales :::::')
-                    for title in self._package_dict.get('localised_titles'):
-                        session.add_all([
-                            PackageMultilang(package_id=package_id, field='title', field_type='localized', lang=title.get('locale'), text=title.get('text')),
-                        ])
+                    loc_titles = self._package_dict.get('localised_titles')
+                    if loc_titles:
+                        log.debug('::::: Persisting title locales :::::')
+                        for title in loc_titles:
+                            PackageMultilang.persist({'id': package_id, 'text': title.get('text'), 'field': 'title'}, title.get('locale'))
 
-                    log.debug('::::: Persisting abstract locales :::::')
-                    for abstract in self._package_dict.get('localised_abstracts'):
-                        session.add_all([
-                            PackageMultilang(package_id=package_id, field='notes', field_type='localized', lang=abstract.get('locale'), text=abstract.get('text')),
-                        ])
-
-                    session.commit()
+                    loc_abstracts = self._package_dict.get('localised_abstracts')
+                    if loc_abstracts:
+                        log.debug('::::: Persisting abstract locales :::::')
+                        for abstract in loc_abstracts:
+                            PackageMultilang.persist({'id': package_id, 'text': abstract.get('text'), 'field': 'notes'}, abstract.get('locale'))
 
                     log.info('::::::::: OBJECT PERSISTED SUCCESSFULLY :::::::::')
 
@@ -362,14 +381,16 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
                     for row in rows:
                         if row.field == 'title': 
                             titles = self._package_dict.get('localised_titles')
-                            for title in titles:
-                                if title.get('locale') == row.lang:
-                                    row.text = title.get('text')
+                            if titles:
+                                for title in titles:
+                                    if title.get('locale') == row.lang:
+                                        row.text = title.get('text')
                         elif row.field == 'notes': 
                             abstracts = self._package_dict.get('localised_abstracts')
-                            for abstract in abstracts:
-                                if abstract.get('locale') == row.lang:
-                                    row.text = abstract.get('text')
+                            if abstracts:
+                                for abstract in abstracts:
+                                    if abstract.get('locale') == row.lang:
+                                        row.text = abstract.get('text')
 
                         row.save()
 
@@ -385,8 +406,11 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
                 raise
 
             # Persisting localized Tags
-            try:
-                for tag in self._package_dict.get('localized_tags'):
+            
+            loc_tags = self._package_dict.get('localized_tags')
+            if loc_tags:
+                log.debug('::::: Persisting tag locales :::::')
+                for tag in loc_tags:
                     tag_name = tag.get('text')
                     tag_lang = tag.get('locale')
                     tag_localized_name = tag.get('localized_text')
@@ -397,29 +421,25 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
                         # Update the existing record                        
                         if tag_localized_name and tag_localized_name != tag.text:
                             tag.text = tag_localized_name
-                            tag.save()
 
-                            log.info('::::::::: OBJECT TAG UPDATED SUCCESSFULLY :::::::::') 
+                            try:
+                                tag.save()
+                                log.info('::::::::: OBJECT TAG UPDATED SUCCESSFULLY :::::::::') 
+                                pass
+                            except Exception, e:
+                                # on rollback, the same closure of state
+                                # as that of commit proceeds. 
+                                session.rollback()
+
+                                log.error('Exception occurred while persisting DB objects: %s', e)
+                                raise
                     else:
                         # Create a new localized record
                         existing_tag = model.Tag.by_name(tag_name)
 
                         if existing_tag:
-                            session.add_all([
-                                TagMultilang(tag_id=existing_tag.id, tag_name=tag_name, lang=tag_lang, text=tag_localized_name),
-                            ])
-
+                            TagMultilang.persist({'id': existing_tag.id, 'name': tag_name, 'text': tag_localized_name}, tag_lang)
                             log.info('::::::::: OBJECT TAG PERSISTED SUCCESSFULLY :::::::::')
-
-                        session.commit()
-                pass
-            except Exception, e:
-                # on rollback, the same closure of state
-                # as that of commit proceeds. 
-                session.rollback()
-
-                log.error('Exception occurred while persisting DB objects: %s', e)
-                raise
 
         # Updating Solr Index
         if package_dict:

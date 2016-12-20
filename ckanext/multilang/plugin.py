@@ -6,7 +6,14 @@ import ckan.plugins.toolkit as toolkit
 import ckanext.multilang.helpers as helpers
 import ckanext.multilang.actions as actions
 
+
+import ckan.lib.dictization.model_dictize as model_dictize
+import ckan.model as model
+
 from routes.mapper import SubMapper, Mapper as _Mapper
+
+from pylons.i18n import get_lang
+from ckanext.multilang.model import PackageMultilang, GroupMultilang, TagMultilang, ResourceMultilang
 
 log = logging.getLogger(__name__)
 
@@ -16,7 +23,10 @@ class MultilangPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
-    plugins.implements(plugins.IActions)
+    plugins.implements(plugins.IGroupController, inherit=True)
+    plugins.implements(plugins.IOrganizationController, inherit=True)
+    plugins.implements(plugins.IResourceController, inherit=True)
+    plugins.implements(plugins.IActions, inherit=True)
 
     # IConfigurer
     def update_config(self, config_):
@@ -27,76 +37,20 @@ class MultilangPlugin(plugins.SingletonPlugin):
     # see the ITemplateHelpers plugin interface.
     def get_helpers(self):
         return {
-            'get_localized_org': helpers.get_localized_org
+            'get_localized_pkg': helpers.get_localized_pkg,
+            'get_localized_group': helpers.get_localized_group,
+            'get_localized_resource': helpers.get_localized_resource
+        }
+
+    def get_actions(self):
+        return {
+            'group_list': actions.group_list,
+            'organization_list': actions.organization_list
         }
 
     def before_map(self, map):
-        map.connect('/dataset', controller='ckanext.multilang.controllers.package:MultilangPackageController', action='search')
-        map.connect('/dataset/new', controller='ckanext.multilang.controllers.package:MultilangPackageController', action='new')
-        map.connect('/dataset/{id}', controller='ckanext.multilang.controllers.package:MultilangPackageController', action='read')
         map.connect('/dataset/edit/{id}', controller='ckanext.multilang.controllers.package:MultilangPackageController', action='edit')
-        map.connect('/dataset/groups/{id}', controller='ckanext.multilang.controllers.package:MultilangPackageController', action='groups')
-        map.connect('/dataset/{id}/resource/{resource_id}', controller='ckanext.multilang.controllers.package:MultilangPackageController', action='resource_read')
-        map.connect('/dataset/{id}/resource_edit/{resource_id}', controller='ckanext.multilang.controllers.package:MultilangPackageController', action='resource_edit')
-        map.connect('/dataset/resources/{id}', controller='ckanext.multilang.controllers.package:MultilangPackageController', action='resources')
-        map.connect('/dataset/new_resource/{id}', controller='ckanext.multilang.controllers.package:MultilangPackageController', action='new_resource')
-        #map.connect('/dataset/{id}/resource_delete/{resource_id}', controller='ckanext.multilang.controllers.package:MultilangPackageController', action='resource_delete')
-
-        map.connect('/group', controller='ckanext.multilang.controllers.group:MultilangGroupController', action='index')
-        map.connect('/group/new', controller='ckanext.multilang.controllers.group:MultilangGroupController', action='new')
-        map.connect('/group/{id}', controller='ckanext.multilang.controllers.group:MultilangGroupController', action='read')
-        map.connect('/group/edit/{id}', controller='ckanext.multilang.controllers.group:MultilangGroupController', action='edit')
-        map.connect('/group/about/{id}', controller='ckanext.multilang.controllers.group:MultilangGroupController', action='about')
-
-        map.connect('/organization', controller='ckanext.multilang.controllers.organization:MultilangOrganizationController', action='index')
-        map.connect('/organization/new', controller='ckanext.multilang.controllers.organization:MultilangOrganizationController', action='new')
-        map.connect('/organization/{id}', controller='ckanext.multilang.controllers.organization:MultilangOrganizationController', action='read')
-        map.connect('/organization/edit/{id}', controller='ckanext.multilang.controllers.organization:MultilangOrganizationController', action='edit')   
-        map.connect('/organization/about/{id}', controller='ckanext.multilang.controllers.organization:MultilangOrganizationController', action='about')   
-        
-        # users
-        map.redirect('/users/{url:.*}', '/user/{url}')
-        map.redirect('/user/', '/user')
-        with SubMapper(map, controller='user') as m:
-            m.connect('/user/edit', action='edit')
-            # Note: openid users have slashes in their ids, so need the wildcard
-            # in the route.
-            m.connect('user_generate_apikey', '/user/generate_key/{id}', action='generate_apikey')
-            m.connect('/user/activity/{id}/{offset}', action='activity')
-            m.connect('user_activity_stream', '/user/activity/{id}',
-                      action='activity', ckan_icon='time')
-            m.connect('user_dashboard', '/dashboard', action='dashboard',
-                      ckan_icon='list')
-            m.connect('user_dashboard_datasets', '/dashboard/datasets',
-                      action='dashboard_datasets', ckan_icon='sitemap')
-            m.connect('user_dashboard_groups', '/dashboard/groups',
-                      action='dashboard_groups', ckan_icon='group')
-            m.connect('user_dashboard_organizations', '/dashboard/organizations',
-                      action='dashboard_organizations', ckan_icon='building')
-            m.connect('/dashboard/{offset}', action='dashboard')
-            m.connect('user_follow', '/user/follow/{id}', action='follow')
-            m.connect('/user/unfollow/{id}', action='unfollow')
-            m.connect('user_followers', '/user/followers/{id:.*}',
-                      action='followers', ckan_icon='group')
-            m.connect('user_edit', '/user/edit/{id:.*}', action='edit',
-                      ckan_icon='cog')
-            m.connect('user_delete', '/user/delete/{id}', action='delete')
-            m.connect('/user/reset/{id:.*}', action='perform_reset')
-            m.connect('register', '/user/register', action='register')
-            m.connect('login', '/user/login', action='login')
-            m.connect('/user/_logout', action='logout')
-            m.connect('/user/logged_in', action='logged_in')
-            m.connect('/user/logged_out', action='logged_out')
-            m.connect('/user/logged_out_redirect', action='logged_out_page')
-            m.connect('/user/reset', action='request_reset')
-            m.connect('/user/me', action='me')
-            m.connect('/user/set_lang/{lang}', action='set_lang')
-            #m.connect('user_datasets', '/user/{id:.*}', action='read',
-            #          ckan_icon='sitemap')
-            m.connect('user_index', '/user', action='index')
-        
-            map.connect('/user/{id:.*}', controller='ckanext.multilang.controllers.user:MultilangUserController', action='read') 
-
+        map.connect('/dataset/new', controller='ckanext.multilang.controllers.package:MultilangPackageController', action='new')
         return map
 
     def before_index(self, pkg_dict):
@@ -108,55 +62,219 @@ class MultilangPlugin(plugins.SingletonPlugin):
             pkg_dict['package_multilang_localized_' + package.field + '_' + package.lang] = package.text
             log.debug('Index successfully created for Package: %r', pkg_dict.get('package_multilang_localized_' + package.field + '_' + package.lang))
 
-        '''from ckanext.multilang.model import GroupMultilang
-        multilang_localized = GroupMultilang.get_for_group_name(str(pkg_dict['organization']))
-
-        for organization in multilang_localized:
-            log.debug('...Creating index for Organization localized field: ' + organization.field + ' - ' + organization.lang)
-            pkg_dict['organization_multilang_localized_' + organization.field + '_' + organization.lang] = organization.text
-            log.debug('Index successfully created for Organization: %r', pkg_dict.get('organization_multilang_localized_' + organization.field + '_' + organization.lang))
-
-        for group in pkg_dict['groups']:
-            multilang_localized = GroupMultilang.get_for_group_name(str(group))
-
-            for record in multilang_localized:
-                log.debug('...Creating index for Group localized field: ' + organization.field + ' - ' + organization.lang)
-                pkg_dict['group_multilang_localized_' + record.field + '_' + record.lang] = record.text
-                log.debug('Index successfully created for Group: %r', pkg_dict.get('group_multilang_localized_' + organization.field + '_' + organization.lang))'''
-
         return pkg_dict
 
-    def get_actions(self):
-        return {
-            'group_list': actions.group_list,
-            'organization_list': actions.organization_list
-        }
-        
-    '''
-    def before_search(self, search_params):
-        log.debug('MULTILANG - search_params: %r', search_params)
+    def before_view(self, odict):        
+        otype = odict.get('type')
+        lang = helpers.getLanguage()
 
-        from pylons.i18n.translation import get_lang
+        if lang:
+            if otype == 'group' or otype == 'organization':
+                #  MULTILANG - Localizing Group/Organizzation names and descriptions in search list
+                # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == odict.get('id'), GroupMultilang.lang == lang).all()
+                q_results = GroupMultilang.get_for_group_id_and_lang(odict.get('id'), lang) 
 
-        if get_lang():
-            lang = get_lang()[0]
+                if q_results:
+                    for result in q_results:
+                        odict[result.field] = result.text
+                        if result.field == 'title':
+                            odict['display_name'] = result.text
 
-            #
-            # Adding a localized query with the new created indexes into the
-            # Solr facet queries.
-            #
-            fq = search_params.get('fq')
-            log.debug('MULTILANG - fq: %r', fq)
-            q = search_params.get('q')
-            log.debug('MULTILANG - q: %r', q)
+
+            elif otype == 'dataset':
+                #  MULTILANG - Localizing Datasets names and descriptions in search list
+                #  MULTILANG - Localizing Tags display names in Facet list
+                tags = odict.get('tags')
+                if tags:
+                    for tag in tags:
+                        localized_tag = TagMultilang.by_tag_id(tag.get('id'), lang)
+
+                        if localized_tag:
+                            tag['display_name'] = localized_tag.text
+
+                #  MULTILANG - Localizing package sub dict for the dataset read page
+                # q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == odict['id'], PackageMultilang.lang == lang).all()
+                q_results = PackageMultilang.get_for_package_id_and_lang(odict.get('id'), lang) 
+
+                if q_results:
+                    for result in q_results:
+                        odict[result.field] = result.text
+                        if result.field == 'notes':
+                            odict['notes'] = result.text
+
+                #  MULTILANG - Localizing organization sub dict for the dataset read page
+                organization = odict.get('organization')
+                if organization:
+                    # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == organization.get('id'), GroupMultilang.lang == lang).all() 
+                    q_results = GroupMultilang.get_for_group_id_and_lang(organization.get('id'), lang)
+                    
+                    if q_results:
+                        for result in q_results:
+                            organization[result.field] = result.text
+
+                    odict['organization'] = organization
+
+                #  MULTILANG - Localizing resources dict
+                resources = odict.get('resources')
+                if resources:
+                    for resource in resources:
+                        # q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource.get('id'), ResourceMultilang.lang == lang).all()
+                        q_results = ResourceMultilang.get_for_resource_id_and_lang(resource.get('id'), lang)
+                
+                        if q_results:
+                            for result in q_results:
+                                resource[result.field] = result.text
+
+        return odict
+
+    def after_search(self, search_results, search_params):
+        search_facets = search_results.get('search_facets')
+        lang = helpers.getLanguage()
+
+        if search_facets and lang:
+            if 'tags' in search_facets:
+                #  MULTILANG - Localizing Tags display names in Facet list
+                tags = search_facets.get('tags')
+                for tag in tags.get('items'):
+                    localized_tag = TagMultilang.by_name(tag.get('name'), lang)
+
+                    if localized_tag:
+                        tag['display_name'] = localized_tag.text
             
-            if q and fq and q != '*:*':
-                fq = fq + ' +(multilang_localized_title_' + lang + ':' + q + ' OR multilang_localized_notes_' + lang + ':' + q +')'
-                search_params['fq'] = fq
-                search_params['q'] = u''
+            if 'organization' in search_facets:
+                #  MULTILANG - Localizing Organizations display names in Facet list
+                organizations = search_facets.get('organization')
+                for org in organizations.get('items'):
+                    # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.name == org.get('name'), GroupMultilang.lang == lang).all()
+                    q_results = GroupMultilang.get_for_group_name_and_lang(org.get('name'), lang) 
 
-            log.debug('::::::::::::::::::::::::::::::before_search - search_params: %r', search_params)
+                    if q_results:
+                        for result in q_results:
+                            if result.field == 'title':
+                                org['display_name'] = result.text
 
-        return search_params
-    '''    
+            if 'groups' in search_facets:
+                #  MULTILANG - Localizing Groups display names in Facet list
+                groups = search_facets.get('groups')
+                for group in groups.get('items'):
+                    # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.name == group.get('name'), GroupMultilang.lang == lang).all()
+                    q_results = GroupMultilang.get_for_group_name_and_lang(group.get('name'), lang)
+
+                    if q_results:
+                        for result in q_results:
+                            if result.field == 'title':
+                                group['display_name'] = result.text
+
+        search_results['search_facets'] = search_facets
+        return search_results
+
+    ## ##############
+    ## CREATE 
+    ## ##############
+    def create(self, model_obj):
+        otype = model_obj.type
+        lang = helpers.getLanguage()
+
+        ## CREATE GROUP OR ORGANIZATION
+        if otype == 'group' or otype == 'organization' and lang:
+            log.info('::::: Persisting localised metadata locale :::::')
+            lang = helpers.getLanguage()
+
+            group = model_dictize.group_dictize(model_obj, {'model': model, 'session': model.Session})
+
+            GroupMultilang.persist(group, lang)
+
+    ## ##############
+    ## EDIT
+    ## ##############
+    def edit(self, model_obj):     
+        otype = model_obj.type
+        lang = helpers.getLanguage()
+
+        ## EDIT GROUP OR ORGANIZATION
+        if otype == 'group' or otype == 'organization' and lang:
+            group = model_dictize.group_dictize(model_obj, {'model': model, 'session': model.Session})
+
+            # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == group.get('id')).all()
+            q_results = GroupMultilang.get_for_group_id(group.get('id'))
+
+            create_new = False
+            if q_results:
+                available_db_lang = []
+
+                for result in q_results:
+                    if result.lang not in available_db_lang:
+                        available_db_lang.append(result.lang)
+
+                    # check if the group identifier name has been changed
+                    if result.name != group.get('name'):
+                        result.name = group.get('name')
+                        result.save()
+
+                if lang not in available_db_lang:
+                    create_new = True
+                else:
+                    for result in q_results:
+                        if result.lang == lang:
+                            result.text = group.get(result.field)
+                            result.save()
+            else:
+                create_new = True
+
+            if create_new == True:
+                log.info(':::::::::::: Localized fields are missing in package_multilang table, persisting defaults using values in the table group :::::::::::::::')
+                GroupMultilang.persist(group, lang)
+        
+    ## ##############
+    ## DELETE
+    ## ##############
+    def delete(self, model_obj):
+        return model_obj
+
+    def before_show(self, resource_dict):
+        lang = helpers.getLanguage()
+        if lang:            
+            #  MULTILANG - Localizing resources dict
+            # q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource_dict.get('id'), ResourceMultilang.lang == lang).all()
+            q_results = ResourceMultilang.get_for_resource_id_and_lang(resource_dict.get('id'), lang)
+
+            if q_results:
+                for result in q_results:
+                    resource_dict[result.field] = result.text
+
+        return resource_dict
+
+    def after_update(self, context, resource):
+        otype = resource.get('type')
+        lang = helpers.getLanguage()
+
+        if otype != 'dataset' and lang:
+            # r = model.Session.query(model.Resource).filter(model.Resource.id == resource.get('id')).all()
+            r = model.Resource.get(resource.get('id'))
+            if r:
+                r = model_dictize.resource_dictize(r, {'model': model, 'session': model.Session})
+
+                # MULTILANG - persisting resource localized record in multilang table
+                # q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource.get('id'), ResourceMultilang.lang == lang).all()
+                q_results = ResourceMultilang.get_for_resource_id_and_lang(r.get('id'), lang)
+                if q_results and q_results.count() > 0:
+                    for result in q_results:
+                        result.text = r.get(result.field)
+                        result.save()
+                else:
+                    log.info('Localised fields are missing in resource_multilang table, persisting ...')
+                    ResourceMultilang.persist(r, lang)
+
+    def after_create(self, context, resource):
+        otype = resource.get('type')
+        lang = helpers.getLanguage()
+
+        if otype != 'dataset' and lang:
+            #  MULTILANG - Creating new resource for multilang table
+            # r = model.Session.query(model.Resource).filter(model.Resource.id == resource.get('id')).all()
+            r = model.Resource.get(resource.get('id'))
+            if r:
+                log.info('Localised fields are missing in resource_multilang table, persisting ...')
+                ResourceMultilang.persist(resource, lang)
+
 
