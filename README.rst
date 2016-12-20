@@ -34,38 +34,41 @@ Installation
 To install ckanext-multilang:
 
 
-1. Activate your CKAN virtual environment, for example:
+1. Activate your CKAN virtual environment, for example::
 
-     `. /usr/lib/ckan/default/bin/activate`
+     . /usr/lib/ckan/default/bin/activate
      
-2. Go into your CKAN path for extension (like /usr/lib/ckan/default/src):
+2. Go into your CKAN path for extension (like /usr/lib/ckan/default/src)::
 
-    `git clone https://github.com/geosolutions-it/ckanext-multilang.git`
+    git clone https://github.com/geosolutions-it/ckanext-multilang.git
     
-    `cd ckanext-multilang`
+    cd ckanext-multilang
     
-    `pip install -e .`
+    pip install -e .
 
-3. paster --plugin=ckanext-multilang multilangdb initdb --config=/etc/ckan/default/production.ini
+3. Initialize the DB with the mandatory Tables needed for localized records::
+
+      paster --plugin=ckanext-multilang multilangdb initdb --config=/etc/ckan/default/production.ini
 
 4. Add ``multilang`` and ``multilang_harvester`` to the ``ckan.plugins`` setting in your CKAN
-   config file (by default the config file is located at
-   ``/etc/ckan/default/production.ini``).
+   config file (by default the config file is located at ``/etc/ckan/default/production.ini``).
    
-5. Update the Solr schema.xml file used by CKAN introducing the following elements:
+5. Update the Solr schema.xml file used by CKAN introducing the following elements.
    
-   Inside the 'fields' Tag:
-      <dynamicField name="package_multilang_localized_*" type="text" indexed="true" stored="true" multiValued="false"/>
+   **Inside the 'fields' Tag**::
    
-   A new 'copyField' to append:
-      <copyField source="package_multilang_localized_*" dest="text"/>
+          <dynamicField name="package_multilang_localized_*" type="text" indexed="true" stored="true" multiValued="false"/>
+   
+   **A new 'copyField' to append**::
+   
+          <copyField source="package_multilang_localized_*" dest="text"/>
       
 
 6. Restart Solr.
 
-7. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
+7. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu::
 
-     `sudo service apache2 reload`
+     sudo service apache2 reload
 
 ------------------------
 Development Installation
