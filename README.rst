@@ -16,6 +16,11 @@ The ckanext-multilang provides also an harvester built on the ckanext-spatial ex
 With this harvester, localized content for Dataset in CKAN can be retrieved form metadata that contains the gmd:PT_FreeText XML 
 element (see the WIKI for more details).	
 
+----
+WIKI
+----
+
+The WIKI page of this CKAN extension can be found `here <https://github.com/geosolutions-it/ckanext-multilang/wiki>`_ in this repositorty.
 
 ------------
 Requirements
