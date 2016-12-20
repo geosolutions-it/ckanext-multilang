@@ -22,6 +22,15 @@ WIKI
 
 The WIKI page of this CKAN extension can be found `here <https://github.com/geosolutions-it/ckanext-multilang/wiki>`_ in this repositorty.
 
+-------
+License
+-------
+
+**ckanext-multilang** is Free and Open Source software and is licensed under the GNU Affero General Public License (AGPL) v3.0 whose full text may be found at:
+
+http://www.fsf.org/licensing/licenses/agpl-3.0.html
+
+
 ------------
 Requirements
 ------------
@@ -88,3 +97,14 @@ To install `ckanext-multilang` for development, activate your CKAN virtualenv an
     python setup.py develop
 
     pip install -r dev-requirements.txt
+
+------------
+Contributing
+------------
+
+We welcome contributions in any form:
+
+* pull requests for new features
+* pull requests for bug fixes
+* pull requests for documentation
+* funding for any combination of the above
