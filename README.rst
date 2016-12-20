@@ -20,7 +20,7 @@ element (see the `WIKI <https://github.com/geosolutions-it/ckanext-multilang/wik
 WIKI
 ----
 
-The WIKI page of this CKAN extension can be found `here <https://github.com/geosolutions-it/ckanext-multilang/wiki>`_ in this repositorty.
+The WIKI page of this CKAN extension can be found `here <https://github.com/geosolutions-it/ckanext-multilang/wiki>`_ in this repository.
 
 -------
 License
