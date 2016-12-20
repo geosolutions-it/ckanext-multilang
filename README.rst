@@ -21,35 +21,38 @@ element (see the WIKI for more details).
 Requirements
 ------------
 
-The ckanext-multilang extension has been developed for CKAN 2.4.
-The ckanext-multilang extension requires the `ckanext-spatial plugin 
-<https://github.com/geosolutions-it/ckanext-spatial/tree/stable_official_after_imp_st>`_ installed on CKAN (see the WIKI for more details about that).
+The ckanext-multilang extension has been developed for CKAN 2.4. In addition:
 
-------------------------
-Development Installation
-------------------------
+* The ckanext-multilang extension requires the `ckanext-spatial plugin <https://github.com/ckan/ckanext-spatial>`_ installed on CKAN (see the `WIKI <https://github.com/geosolutions-it/ckanext-multilang/wiki>`_ for more details about that).
+
+* The ckanext-multilang extension requires the `ckanext-geonetwork plugin <https://github.com/geosolutions-it/ckanext-geonetwork>`_ installed on CKAN if you want to leverage on the advanced harvesting functionalities (see the `WIKI <https://github.com/geosolutions-it/ckanext-multilang/wiki#features>`_ for more details about the multilang harvester).
+
+------------
+Installation
+------------
 
 To install ckanext-multilang:
 
-1. Activate your CKAN virtual environment, for example::
 
-     . /usr/lib/ckan/default/bin/activate
+1. Activate your CKAN virtual environment, for example:
 
-2. Go into your CKAN path for extension (like /usr/lib/ckan/default/src)
+     `. /usr/lib/ckan/default/bin/activate`
+     
+2. Go into your CKAN path for extension (like /usr/lib/ckan/default/src):
 
-3. git clone https://github.com/geosolutions-it/ckanext-multilang.git
+    `git clone https://github.com/geosolutions-it/ckanext-multilang.git`
+    
+    `cd ckanext-multilang`
+    
+    `pip install -e .`
 
-4. cd ckanext-multilang
+3. paster --plugin=ckanext-multilang multilangdb initdb --config=/etc/ckan/default/production.ini
 
-5. python setup.py develop
-
-6. paster --plugin=ckanext-multilang multilangdb initdb --config=/etc/ckan/default/production.ini
-
-7. Add ``multilang`` and ``multilang_harvester`` to the ``ckan.plugins`` setting in your CKAN
+4. Add ``multilang`` and ``multilang_harvester`` to the ``ckan.plugins`` setting in your CKAN
    config file (by default the config file is located at
    ``/etc/ckan/default/production.ini``).
    
-8. Update the Solr schema.xml file used by CKAN introducing the following elements:
+5. Update the Solr schema.xml file used by CKAN introducing the following elements:
    
    Inside the 'fields' Tag:
       <dynamicField name="package_multilang_localized_*" type="text" indexed="true" stored="true" multiValued="false"/>
@@ -58,7 +61,22 @@ To install ckanext-multilang:
       <copyField source="package_multilang_localized_*" dest="text"/>
       
 
-9. Restart Solr.
+6. Restart Solr.
 
-10. Restart CKAN.
+7. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
 
+     `sudo service apache2 reload`
+
+------------------------
+Development Installation
+------------------------
+
+To install `ckanext-multilang` for development, activate your CKAN virtualenv and do::
+
+    git clone https://github.com/geosolutions-it/ckanext-multilang.git
+    
+    cd ckanext-multilang
+    
+    python setup.py develop
+
+    pip install -r dev-requirements.txt
