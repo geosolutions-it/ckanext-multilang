@@ -4,17 +4,17 @@ ckanext-multilang
 =============
 
 The ckanext-multilang CKAN's extension provides a way to localize your CKAN's title and description 
-contents for: Dataset, Resources, Organizations and Groups. This extension creates some new DB tables for this purpose 
+contents for: Dataset, Resources, Tags, Organizations and Groups. This extension creates some new DB tables for this purpose 
 containing localized contents in base of the configured CKAN's locales in configuration (the production.ini file).
 So,  accessing the CKAN's GUI in 'en', for example, the User can create a new Dataset and automatically new localized records 
 for that language will be created  in the multilang tables. In the same way, changing the GUI's language, from the CKAN's language 
-dropdown, the User will be able to edit again the same Dataset in order to specify 'title' and 'description' of the Dataset for the 
+dropdown, the user will be able to edit again the same Dataset in order to specify 'title' and 'description' of the Dataset for the 
 new selected language.
 In this way Dataset's title and description will automatically change simply switching the language from the CKAN's dropdonw.
  
-The ckanext-multilang provides also an harvester built on the ckanext-spatial extension, and inherits all of its functionalities.
-With this harvester, localized content for Dataset in CKAN can be retrieved form metadata that contains the gmd:PT_FreeText XML 
-element (see the WIKI for more details).	
+The ckanext-multilang provides also an harvester built on top of the ckanext-spatial extension, and inherits all of its functionalities.
+With this harvester, localized content for Dataset in CKAN can be retrieved form CSW metadata that contains the gmd:PT_FreeText XML 
+element (see the `WIKI <https://github.com/geosolutions-it/ckanext-multilang/wiki>`_ for more details).	
 
 ----
 WIKI
