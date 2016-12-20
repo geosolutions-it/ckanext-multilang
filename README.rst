@@ -26,7 +26,7 @@ The WIKI page of this CKAN extension can be found `here <https://github.com/geos
 Requirements
 ------------
 
-The ckanext-multilang extension has been developed for CKAN 2.4. In addition:
+The ckanext-multilang extension has been developed for CKAN 2.4 or later. In addition:
 
 * The ckanext-multilang extension requires the `ckanext-spatial plugin <https://github.com/ckan/ckanext-spatial>`_ installed on CKAN (see the `WIKI <https://github.com/geosolutions-it/ckanext-multilang/wiki>`_ for more details about that).
 
