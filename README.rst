@@ -1,7 +1,7 @@
 
-=============
+=================
 ckanext-multilang
-=============
+=================
 
 The ckanext-multilang CKAN's extension provides a way to localize your CKAN's title and description 
 contents for: Dataset, Resources, Tags, Organizations and Groups. This extension creates some new DB tables for this purpose 
@@ -108,3 +108,9 @@ We welcome contributions in any form:
 * pull requests for bug fixes
 * pull requests for documentation
 * funding for any combination of the above
+
+--------------------
+Professional Support
+--------------------
+
+The **ckanext-multilang** is provided as is and no warranty whatsoever is provided. Professional Support is available through our `Enterprise Support Services <http://www.geo-solutions.it/enterprise-support-services>`_ offer.
