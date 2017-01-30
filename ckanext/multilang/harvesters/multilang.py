@@ -264,7 +264,7 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
         for party in citedResponsiblePartys:
             if party["role"] == "owner":                
                 for org in organisation_mapping:
-                    if org.get("value") == party["organisation-name"]:
+                    if org.get("value") in party["organisation-name"]:
                         existing_org = model.Session.query(model.Group).filter(model.Group.name == org.get("key")).first()
 
                         if not existing_org:
