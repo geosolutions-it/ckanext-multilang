@@ -158,7 +158,9 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
     ## Saves in memory the package_dict localised texts 
     ##
     def get_package_dict(self, iso_values, harvest_object):
-        package_dict = super(MultilangHarvester, self).get_package_dict(iso_values, harvest_object)        
+        package_dict = super(MultilangHarvester, self).get_package_dict(iso_values, harvest_object)      
+
+        self._package_dict = {} 
         
         harvester_config = self.source_config.get('ckan_locales_mapping', {})
         if harvester_config:
