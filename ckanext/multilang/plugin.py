@@ -98,9 +98,18 @@ class MultilangPlugin(plugins.SingletonPlugin):
 
                 if q_results:
                     for result in q_results:
-                        odict[result.field] = result.text
-                        if result.field == 'notes':
-                            odict['notes'] = result.text
+                    	if odict.get(result.field, None):
+                    		odict[result.field] = result.text
+                    	else:
+                    		extras = odict.get('extras', None)
+                    		if extras and len(extras) > 0:
+                    			for extra in extras:
+                    				extra_key = extra.get('key', None)
+                    				if extra_key and extra_key == result.field:
+                    					extra['value'] = result.text
+
+                        #if result.field == 'notes':
+                        #    odict['notes'] = result.text
 
                 #  MULTILANG - Localizing organization sub dict for the dataset read page
                 organization = odict.get('organization')
