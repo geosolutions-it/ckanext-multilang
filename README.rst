@@ -37,9 +37,9 @@ Requirements
 
 The ckanext-multilang extension has been developed for CKAN 2.4 or later. In addition:
 
-* The ckanext-multilang extension requires the `ckanext-spatial plugin <https://github.com/ckan/ckanext-spatial>`_ installed on CKAN (see the `WIKI <https://github.com/geosolutions-it/ckanext-multilang/wiki>`_ for more details about that).
+* The CSW multilingual harvester provided by the ckanext-multilang extension requires the `ckanext-spatial plugin <https://github.com/ckan/ckanext-spatial>`_ installed on CKAN (see the `WIKI <https://github.com/geosolutions-it/ckanext-multilang/wiki>`_ for more details about that).
 
-* The ckanext-multilang extension requires the `ckanext-geonetwork plugin <https://github.com/geosolutions-it/ckanext-geonetwork>`_ installed on CKAN if you want to leverage on the advanced harvesting functionalities (see the `WIKI <https://github.com/geosolutions-it/ckanext-multilang/wiki#features>`_ for more details about the multilang harvester).
+* The CSW multilingual harvester provided by the ckanext-multilang extension requires the `ckanext-geonetwork plugin <https://github.com/geosolutions-it/ckanext-geonetwork>`_ installed on CKAN if you want to leverage on the advanced harvesting functionalities (see the `WIKI <https://github.com/geosolutions-it/ckanext-multilang/wiki#features>`_ for more details about the multilang harvester).
 
 ------------
 Installation
