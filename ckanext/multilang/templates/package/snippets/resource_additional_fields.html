@@ -1,0 +1,11 @@
+{% import 'macros/form.html' as form %}
+
+{% set schema = h.get_multilang_resource_schema() %}
+
+
+{% for field in schema %}
+    {% set value = data[field.name] %}
+    {{ field }}
+    {{ value }}
+
+{% endfor %}
