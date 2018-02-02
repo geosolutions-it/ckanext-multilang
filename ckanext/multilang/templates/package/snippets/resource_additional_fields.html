@@ -2,10 +2,68 @@
 
 {% set schema = h.get_multilang_resource_schema() %}
 
+{# renders information block #}
+{% macro help_block(content) %}
+    {% if content %}
+    <span class="inline-block" data-module="dcatapit-help">
+      <i class="icon-info-sign size-12" title="{{ content }}"></i>
+    </span>
+    {% endif %}
+{% endmacro %}
+
+{%- macro attributes(attrs={}) -%}
+  {%- for key, value in attrs.items() -%}
+  {{ " " }}{{ key }}{% if value != "" %}="{{ value }}"{% endif %}
+  {%- endfor -%}
+{%- endmacro -%}
+
+{% macro input_block(for, label="", error="", classes=[], control_classes=[], extra_html="", is_required=false) %}
+  <div class="control-group{{ " error" if error }}{{ " " ~ classes | join(' ') }}">
+    <label class="control-label" for="{{ for }}">{% if is_required %}<span title="{{ _("This field is required") }}" class="control-required">*</span> {% endif %}{{ label or _('Custom') }}</label>
+    <div class="controls{{ " " ~ control_classes | join(' ') }}">
+      {{ caller() }}
+      {% if error and error is iterable %}<span class="error-block">{{ error|join(', ') }}</span>{% endif %}
+      {{ extra_html }}
+    </div>
+  </div>
+{% endmacro %}
+
+
+{% macro vocabulary(name, id='', label='', value='', placeholder='', type='text', error="", options=(), classes=[], attrs={}, is_required=false, multiple=True, use_autocomplete=True) %}
+  {%- set extra_html = caller() if caller -%}
+  {% call input_block(id or name, label or name, error, classes, extra_html=extra_html, is_required=is_required) %}
+
+      <select class="theme_select" placeholder="{{ placeholder }}" name="{{ name }}" {{ attributes(attrs) }} {% if multiple %}multiple{% endif %} {% if use_autocomplete %}data-module="autocomplete"{% endif %}>
+        {% for option in options %}
+          <option value="{{ option.value }}"{% if value and option.value in value %} selected {% endif %}>{{ option.text or option.value }}</option>
+        {% endfor %}
+      </select>
+    {{ help_block(help) }}
+
+  {% endcall %}
+{% endmacro %}
+
+
+{% macro input(name, id='', label='', value='', placeholder='', type='text', error="", classes=[], attrs={}, is_required=false, help='') %}
+  {%- set extra_html = caller() if caller -%}
+
+  {% call input_block(id or name, label or name, error, classes, extra_html=extra_html, is_required=is_required) %}
+    <input id="{{ id or name }}" type="{{ type }}" name="{{ name }}" value="{{ value | empty_and_escape }}" placeholder="{{ placeholder }}" {{ attributes(attrs) }} />
+    {{ help_block(help) }}
+    
+  {% endcall %}
+{% endmacro %}
 
 {% for field in schema %}
     {% set value = data[field.name] %}
-    {{ field }}
-    {{ value }}
+
+    {% if field.type == 'vocabulary' %}
+        {{ input(field.name, field.id, field.label, data[field.name], field.placeholder, error=errors[field.name], help=field.help) }}
+
+    {% endif %}
 
 {% endfor %}
+
+
+
+

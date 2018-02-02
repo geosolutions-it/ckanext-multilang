@@ -18,6 +18,7 @@ from ckanext.multilang.model import PackageMultilang, GroupMultilang, TagMultila
 
 log = logging.getLogger(__name__)
 
+_ = toolkit._
 
 class MultilangPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
@@ -317,18 +318,21 @@ class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetFo
     def _get_resource_schema(self):
         return [{'name': 'lang',
                  'type': 'vocabulary',
+                 'label': _("Language"),
+                 'placeholder': _("Enter language code"),
                  'validators': ['ignore_missing']}]
 
     def _update_schema(self, schema):
         fields = self._get_resource_schema()
-        res_schema = dict((r['name'], r['validators'],) for r in fields)
+        gv = toolkit.get_validator
+        res_schema = dict((r['name'], [gv(v) for v in r['validators']]) for r in fields)
 
         res = schema['resources']
         res.update(res_schema)
         schema['resources'] = res
         return schema
 
-    def show_package_schema(self, schema):
+    def show_package_schema(self):
         schema = super(MultilangResourcesPlugin, self).show_package_schema()
         return self._update_schema(schema)
 

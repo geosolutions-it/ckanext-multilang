@@ -9,6 +9,9 @@ Example:
   {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources %}
 
 #}
+
+{% set lang = h.lang() %}
+{% set has_permission = can_edit and url_is_edit %}
 <section id="dataset-resources" class="resources">
   <h3>{{ _('Data and Resources') }}</h3>
   {% block resource_list %}
@@ -16,8 +19,9 @@ Example:
       <ul class="{% block resource_list_class %}resource-list{% endblock %}">
         {% block resource_list_inner %}
           {% for resource in resources %}
-            {{ resource }}
-            {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=resource %}
+            {% if resource.get('lang') in (lang, None,) or has_permission %}
+            {% snippet 'package/snippets/resource_item_multilang.html', pkg=pkg, res=resource %}
+            {% endif %}
           {% endfor %}
         {% endblock %}
       </ul>
