@@ -5,6 +5,6 @@
     {{ super() }}
 
     {% if res.lang %}
-        <p> {% trans %}Language{% endtrans %}: <span class="text text-info small">{{ res.lang }}</span></p>
+        <p> {% trans %}Available in language{% endtrans %}: <span class="text text-info small">{{ h.get_lang_name(res.lang) }} [{{ res.lang }}]</span></p>
     {% endif %}
 {% endblock %}

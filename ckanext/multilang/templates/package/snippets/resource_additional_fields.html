@@ -29,37 +29,23 @@
 {% endmacro %}
 
 
-{% macro vocabulary(name, id='', label='', value='', placeholder='', type='text', error="", options=(), classes=[], attrs={}, is_required=false, multiple=True, use_autocomplete=True) %}
-  {%- set extra_html = caller() if caller -%}
-  {% call input_block(id or name, label or name, error, classes, extra_html=extra_html, is_required=is_required) %}
-
-      <select class="theme_select" placeholder="{{ placeholder }}" name="{{ name }}" {{ attributes(attrs) }} {% if multiple %}multiple{% endif %} {% if use_autocomplete %}data-module="autocomplete"{% endif %}>
-        {% for option in options %}
-          <option value="{{ option.value }}"{% if value and option.value in value %} selected {% endif %}>{{ option.text or option.value }}</option>
-        {% endfor %}
-      </select>
-    {{ help_block(help) }}
-
-  {% endcall %}
-{% endmacro %}
-
-
-{% macro input(name, id='', label='', value='', placeholder='', type='text', error="", classes=[], attrs={}, is_required=false, help='') %}
-  {%- set extra_html = caller() if caller -%}
-
-  {% call input_block(id or name, label or name, error, classes, extra_html=extra_html, is_required=is_required) %}
-    <input id="{{ id or name }}" type="{{ type }}" name="{{ name }}" value="{{ value | empty_and_escape }}" placeholder="{{ placeholder }}" {{ attributes(attrs) }} />
-    {{ help_block(help) }}
-    
-  {% endcall %}
-{% endmacro %}
 
 {% for field in schema %}
     {% set value = data[field.name] %}
 
-    {% if field.type == 'vocabulary' %}
-        {{ input(field.name, field.id, field.label, data[field.name], field.placeholder, error=errors[field.name], help=field.help) }}
+    {% if field.name == 'lang' %}
+        {% set available_locales = h.get_available_locales() %}
 
+        {% call input_block('lang', field.label, errors[field.name]) %}
+          <select id="field-{{ field.name }}-select" name="{{ field.name }}" data-module="autocomplete" data-module-dropdown-class="lang-dropdown" data-module-container-class="lang-container">
+        {% for locale in available_locales %}
+          <option value="{{ locale }}" {% if locale.identifier == data.get(field.name) %}selected="selected"{% endif %}>
+            {{ locale.display_name or locale.english_name }}
+          </option>
+        {% endfor %}
+      </select>
+        {{ help_block(field.help) }}
+      {% endcall %}
     {% endif %}
 
 {% endfor %}

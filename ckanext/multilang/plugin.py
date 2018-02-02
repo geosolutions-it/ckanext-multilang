@@ -1,5 +1,7 @@
 import logging
 
+from babel.core import Locale
+from ckan.lib import helpers as h
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
@@ -314,12 +316,32 @@ class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetFo
         # registers itself as the default (above).
         return []
 
+
+    def _get_lang_name(self, lang):
+        loc = Locale(lang)
+        return loc.display_name or loc.english_name
+
+    def _format_resource_items(self, items):
+        """
+        this wraps default implementation and for fields from custom schema
+        it applies localized labels and values if possible
+        """
+        out = h.format_resource_items(items)
+        new_out = []
+        for key, val in items:
+            if key == 'lang':
+                key = _("Language")
+                loc = Locale(val)
+                val = u'{} [{}]'.format(loc.display_name or loc.english_name, str(loc))
+            new_out.append((key, val))
+        return new_out
     
     def _get_resource_schema(self):
         return [{'name': 'lang',
                  'type': 'vocabulary',
                  'label': _("Language"),
                  'placeholder': _("Enter language code"),
+                 'help': _("Set language for which this resource will be visible"),
                  'validators': ['ignore_missing']}]
 
     def _update_schema(self, schema):
@@ -356,5 +378,7 @@ class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetFo
     def get_helpers(self):
         multilang_helpers = {
             'get_multilang_resource_schema': self._get_resource_schema,
+            'format_resource_items': self._format_resource_items,
+            'get_lang_name': self._get_lang_name,
         }
         return multilang_helpers
