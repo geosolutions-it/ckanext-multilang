@@ -20,7 +20,7 @@ Example:
       <ul class="{% block resource_list_class %}resource-list{% endblock %}">
         {% block resource_list_inner %}
           {% for resource in resources %}
-            {% if resource.get('lang') in (lang, None,) or can_edit %}
+            {% if resource.get('lang') in (lang, None,) and can_edit %}
             {% snippet 'package/snippets/resource_item_multilang.html', pkg=pkg, res=resource %}
             {% endif %}
           {% endfor %}
