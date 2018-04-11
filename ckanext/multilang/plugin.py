@@ -329,7 +329,7 @@ class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetFo
         out = h.format_resource_items(items)
         new_out = []
         for key, val in items:
-            if key == 'lang':
+            if key == 'lang' and val:
                 key = _("Language")
                 loc = Locale(val)
                 val = u'{} [{}]'.format(loc.display_name or loc.english_name, str(loc))
