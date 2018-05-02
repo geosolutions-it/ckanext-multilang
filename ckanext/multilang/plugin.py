@@ -294,12 +294,13 @@ class MultilangPlugin(plugins.SingletonPlugin):
 LOCALIZED_RESOURCES = 'ckanext.multilang.localized_resources'
 
 class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
-
-    ML_ENABLED = 'multilang' in (config.get('ckan.plugins') or '').split(' ')
+    SUPPORTED_IMPLEMENTATIONS = set(['dcatapit_pkg'])
+    PLUGINS = set((config.get('ckan.plugins') or '').split(' '))
+    ML_ENABLED = 'multilang' in PLUGINS
     LOCALIZED_RESOURCES_ENABLED = toolkit.asbool(config.get(LOCALIZED_RESOURCES))
-    LOCALIZED_RESOURCES_IN_DCATAPIT = 'dcatapit_pkg' in (config.get('ckan.plugins') or '').split(' ')
-    ENABLED_LOCAL = LOCALIZED_RESOURCES_ENABLED and not LOCALIZED_RESOURCES_IN_DCATAPIT and ML_ENABLED
-    ENABLED_FEDERATED = LOCALIZED_RESOURCES_ENABLED and LOCALIZED_RESOURCES_IN_DCATAPIT and ML_ENABLED
+    LOCALIZED_RESOURCES_IN_OTHER = len(SUPPORTED_IMPLEMENTATIONS.intersection(PLUGINS)) == 1
+    ENABLED_LOCAL = LOCALIZED_RESOURCES_ENABLED and not LOCALIZED_RESOURCES_IN_OTHER and ML_ENABLED
+    ENABLED_FEDERATED = LOCALIZED_RESOURCES_ENABLED and LOCALIZED_RESOURCES_IN_OTHER and ML_ENABLED
 
     # use this as a plugin only if dcatapit is not enabled
     if ENABLED_LOCAL:
@@ -369,9 +370,6 @@ class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetFo
     def read_template(self):
         return 'package/read_multilang.html'
     
-    def edit_template(self):
-        return 'package/edit_multilang.html'
-
     def resource_form(self):
         return 'package/snippets/resource_form_multilang.html'
 
