@@ -1,0 +1,9 @@
+{% extends 'package/snippets/resource_item.html' %}
+
+
+{% block resource_item_description %}
+    {{ super() }}
+    {% if res.lang and can_edit %}
+        <p> {% trans %}Available in language{% endtrans %}: <span class="text text-info small">{{ h.get_lang_name(res.lang) }} [{{ res.lang }}]</span></p>
+    {% endif %}
+{% endblock %}

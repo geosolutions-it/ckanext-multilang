@@ -1,0 +1,5 @@
+{% extends "package/read.html" %}
+
+  {% block package_resources %}
+    {% snippet "package/snippets/resources_list_multilang.html", pkg=pkg, resources=pkg.resources %}
+  {% endblock %}

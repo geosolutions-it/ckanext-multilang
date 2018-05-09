@@ -1,0 +1,60 @@
+# Translations template for ckanext-multilang.
+# Copyright (C) 2018 ORGANIZATION
+# This file is distributed under the same license as the ckanext-multilang
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2018.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: ckanext-multilang 0.0.1\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2018-04-10 19:06+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.4.0\n"
+
+#: ckanext/multilang/plugin.py:333 ckanext/multilang/plugin.py:342
+msgid "Language"
+msgstr ""
+
+#: ckanext/multilang/plugin.py:343
+msgid "Enter language code"
+msgstr ""
+
+#: ckanext/multilang/plugin.py:344
+msgid "Set language for which this resource will be visible"
+msgstr ""
+
+#: ckanext/multilang/controllers/package.py:175
+#: ckanext/multilang/controllers/package.py:262
+#, python-format
+msgid "Unauthorized to read package %s"
+msgstr ""
+
+#: ckanext/multilang/controllers/package.py:177
+#: ckanext/multilang/controllers/package.py:264
+msgid "Dataset not found"
+msgstr ""
+
+#: ckanext/multilang/controllers/package.py:179
+#: ckanext/multilang/controllers/package.py:266
+msgid "Integrity Error"
+msgstr ""
+
+#: ckanext/multilang/controllers/package.py:185
+msgid "Unable to add package to search index."
+msgstr ""
+
+#: ckanext/multilang/controllers/package.py:272
+msgid "Unable to update search index."
+msgstr ""
+
+
+#: ckanext/multilang/templates/package/snippets/resource_item_multilang.html:8
+msgid "Available in language"
+msgstr ""

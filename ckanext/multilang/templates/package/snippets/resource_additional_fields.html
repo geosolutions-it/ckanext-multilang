@@ -1,0 +1,56 @@
+{% import 'macros/form.html' as form %}
+
+{% set schema = h.get_multilang_resource_schema() %}
+
+{# renders information block #}
+{% macro help_block(content) %}
+    {% if content %}
+    <span class="inline-block" data-module="dcatapit-help">
+      <i class="icon-info-sign size-12" title="{{ content }}"></i>
+    </span>
+    {% endif %}
+{% endmacro %}
+
+{%- macro attributes(attrs={}) -%}
+  {%- for key, value in attrs.items() -%}
+  {{ " " }}{{ key }}{% if value != "" %}="{{ value }}"{% endif %}
+  {%- endfor -%}
+{%- endmacro -%}
+
+{% macro input_block(for, label="", error="", classes=[], control_classes=[], extra_html="", is_required=false) %}
+  <div class="control-group{{ " error" if error }}{{ " " ~ classes | join(' ') }}">
+    <label class="control-label" for="{{ for }}">{% if is_required %}<span title="{{ _("This field is required") }}" class="control-required">*</span> {% endif %}{{ label or _('Custom') }}</label>
+    <div class="controls{{ " " ~ control_classes | join(' ') }}">
+      {{ caller() }}
+      {% if error and error is iterable %}<span class="error-block">{{ error|join(', ') }}</span>{% endif %}
+      {{ extra_html }}
+    </div>
+  </div>
+{% endmacro %}
+
+
+
+{% for field in schema %}
+    {% set value = data[field.name] %}
+
+    {% if field.name == 'lang' %}
+        {% set available_locales = h.get_available_locales() %}
+        
+        {% call input_block('lang', field.label, errors[field.name]) %}
+          <select id="field-{{ field.name }}-select" name="{{ field.name }}" data-module="autocomplete" data-module-dropdown-class="lang-dropdown" data-module-container-class="lang-container">
+            <option value="" {% if data and not data.get(field.name) %}selected="selected"{% endif %}>{% trans %}All languages{% endtrans %}</option>
+        {% for locale in available_locales %}
+           <option value="{{ locale }}" {% if data and data.get(field.name) and locale.identifier == data.get(field.name) %}selected="selected"{% endif %}> 
+            {{ locale.display_name or locale.english_name }}
+          </option>
+        {% endfor %}
+      </select>
+        {{ help_block(field.help) }}
+      {% endcall %}
+    {% endif %}
+
+{% endfor %}
+
+
+
+

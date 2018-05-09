@@ -81,6 +81,7 @@ setup(
         [ckan.plugins]
         multilang=ckanext.multilang.plugin:MultilangPlugin
         multilang_harvester=ckanext.multilang.harvesters.multilang:MultilangHarvester
+        multilang_resources=ckanext.multilang.plugin:MultilangResourcesPlugin
 
         [paste.paster_command]
         multilangdb=ckanext.multilang.commands.multilang:Multilang
