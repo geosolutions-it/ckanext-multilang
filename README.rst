@@ -66,8 +66,11 @@ To install ckanext-multilang:
 
 4. Add ``multilang`` and ``multilang_harvester`` to the ``ckan.plugins`` setting in your CKAN
    config file (by default the config file is located at ``/etc/ckan/default/production.ini``).
+
+5. If you need different resources bound to different languages, add the ``multilang_resources`` plugin.
+   See also `the related wiki page <https://github.com/geosolutions-it/ckanext-multilang/wiki/Plugin-multilang_resources>_`.
    
-5. Update the Solr schema.xml file used by CKAN introducing the following elements.
+6. Update the Solr schema.xml file used by CKAN introducing the following elements.
    
    **Inside the 'fields' Tag**::
    
@@ -78,9 +81,9 @@ To install ckanext-multilang:
           <copyField source="package_multilang_localized_*" dest="text"/>
       
 
-6. Restart Solr.
+7. Restart Solr.
 
-7. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu::
+8. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu::
 
      sudo service apache2 reload
 

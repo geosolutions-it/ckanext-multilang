@@ -1,21 +1,17 @@
 import logging
-
 from babel.core import Locale
+from pylons.i18n import get_lang
+from routes.mapper import SubMapper, Mapper as _Mapper
+
 from ckan.lib import helpers as h
+from ckan.lib.base import config
+import ckan.lib.dictization.model_dictize as model_dictize
+import ckan.model as model
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
 import ckanext.multilang.helpers as helpers
 import ckanext.multilang.actions as actions
-
-
-import ckan.lib.dictization.model_dictize as model_dictize
-import ckan.model as model
-from ckan.lib.base import config
-
-from routes.mapper import SubMapper, Mapper as _Mapper
-
-from pylons.i18n import get_lang
 from ckanext.multilang.model import PackageMultilang, GroupMultilang, TagMultilang, ResourceMultilang
 
 log = logging.getLogger(__name__)
@@ -291,21 +287,10 @@ class MultilangPlugin(plugins.SingletonPlugin):
                 ResourceMultilang.persist(resource, lang)
 
 
-LOCALIZED_RESOURCES = 'ckanext.multilang.localized_resources'
-
 class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
-    SUPPORTED_IMPLEMENTATIONS = set(['dcatapit_pkg'])
-    PLUGINS = set((config.get('ckan.plugins') or '').split(' '))
-    ML_ENABLED = 'multilang' in PLUGINS
-    LOCALIZED_RESOURCES_ENABLED = toolkit.asbool(config.get(LOCALIZED_RESOURCES))
-    LOCALIZED_RESOURCES_IN_OTHER = len(SUPPORTED_IMPLEMENTATIONS.intersection(PLUGINS)) == 1
-    ENABLED_LOCAL = LOCALIZED_RESOURCES_ENABLED and not LOCALIZED_RESOURCES_IN_OTHER and ML_ENABLED
-    ENABLED_FEDERATED = LOCALIZED_RESOURCES_ENABLED and LOCALIZED_RESOURCES_IN_OTHER and ML_ENABLED
 
-    # use this as a plugin only if dcatapit is not enabled
-    if ENABLED_LOCAL:
-        plugins.implements(plugins.IDatasetForm)
-        plugins.implements(plugins.ITemplateHelpers)
+    plugins.implements(plugins.IDatasetForm)
+    plugins.implements(plugins.ITemplateHelpers)
 
     def is_fallback(self):
         # Return True to register this plugin as the default handler for
@@ -317,6 +302,34 @@ class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetFo
         # registers itself as the default (above).
         return []
 
+    def show_package_schema(self):
+        schema = super(MultilangResourcesPlugin, self).show_package_schema()
+        return MultilangResourcesAux.update_schema(schema)
+
+    def create_package_schema(self):
+        schema = super(MultilangResourcesPlugin, self).create_package_schema()
+        return MultilangResourcesAux.update_schema(schema)
+        
+    def update_package_schema(self):
+        schema = super(MultilangResourcesPlugin, self).update_package_schema()
+        return MultilangResourcesAux.update_schema(schema)
+        
+    def read_template(self):
+        return MultilangResourcesAux.read_template()
+    
+    def resource_form(self):
+        return MultilangResourcesAux.resource_form();
+
+    def get_helpers(self):
+        return MultilangResourcesAux.get_helpers()
+
+
+class MultilangResourcesAux():
+    """
+    IDatasetForm has some problems when inherited more than once,
+    so this class exposes methods for being reused by external plugins that
+    needs the multilang resources functionality.
+    """
 
     def _get_lang_name(self, lang):
         loc = Locale(lang)
@@ -345,7 +358,7 @@ class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetFo
                  'help': _("Set language for which this resource will be visible"),
                  'validators': ['ignore_missing']}]
 
-    def _update_schema(self, schema):
+    def update_schema(self, schema):
         fields = self._get_resource_schema()
         gv = toolkit.get_validator
         res_schema = dict((r['name'], [gv(v) for v in r['validators']]) for r in fields)
@@ -354,18 +367,6 @@ class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetFo
         res.update(res_schema)
         schema['resources'] = res
         return schema
-
-    def show_package_schema(self):
-        schema = super(MultilangResourcesPlugin, self).show_package_schema()
-        return self._update_schema(schema)
-
-    def create_package_schema(self):
-        schema = super(MultilangResourcesPlugin, self).create_package_schema()
-        return self._update_schema(schema)
-        
-    def update_package_schema(self):
-        schema = super(MultilangResourcesPlugin, self).update_package_schema()
-        return self._update_schema(schema)
         
     def read_template(self):
         return 'package/read_multilang.html'
