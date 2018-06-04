@@ -46,6 +46,9 @@ sudo cp ckan/ckan/config/solr/schema.xml /etc/solr/conf/schema.xml
 
 sudo service jetty restart
 
+# wait for solr to get up
+sleep 20
+
 echo
 echo "Creating the PostgreSQL user and database..."
 
@@ -70,13 +73,14 @@ paster harvester initdb -c ../ckan/test-core.ini
 cd -
 
 
-echo "Installing ckanext-ckanext-multilang and its requirements..."
-python setup.py develop
-pip install -r dev-requirements.txt
-paster multilangdb initdb -c test.ini
 
 echo "Moving test.ini into a subdir..."
 mkdir subdir
 mv test.ini subdir
+
+echo "Installing ckanext-ckanext-multilang and its requirements..."
+python setup.py develop
+pip install -r dev-requirements.txt
+paster multilangdb initdb -c subdir/test.ini
 
 echo "travis-build.bash is done."
