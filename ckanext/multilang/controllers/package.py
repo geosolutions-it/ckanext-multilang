@@ -7,7 +7,8 @@ from urllib import urlencode
 
 import ckan.lib.navl.dictization_functions as dict_fns
 
-from ckan.common import request, c, h, _
+from ckan.lib.base import h
+from ckan.common import request, c, _
 
 from ckan.controllers.package import PackageController
 from ckanext.multilang.model import PackageMultilang, TagMultilang
