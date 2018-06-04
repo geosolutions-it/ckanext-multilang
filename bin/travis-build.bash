@@ -61,6 +61,15 @@ cd ckan
 paster db init -c test-core.ini
 cd -
 
+echo "Installing ckanext-harvest and its requirements..."
+git clone https://github.com/ckan/ckanext-harvest
+cd ckanext-harvest
+python setup.py develop
+pip install -r pip-requirements.txt --allow-all-external
+paster harvester initdb -c ../ckan/test-core.ini
+cd -
+
+
 echo "Installing ckanext-ckanext-multilang and its requirements..."
 python setup.py develop
 pip install -r dev-requirements.txt
