@@ -73,7 +73,7 @@ cd -
 echo "Installing ckanext-ckanext-multilang and its requirements..."
 python setup.py develop
 pip install -r dev-requirements.txt
-paster multilang initdb -c test.ini
+paster multilangdb initdb -c test.ini
 
 echo "Moving test.ini into a subdir..."
 mkdir subdir
