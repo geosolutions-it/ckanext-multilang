@@ -21,7 +21,7 @@ try:
     redirect = base.redirect
 except AttributeError:
     # ckan 2.7+
-    redirect = helpers.redirect_to
+    redirect = h.redirect_to
 
 NotFound = logic.NotFound
 NotAuthorized = logic.NotAuthorized
