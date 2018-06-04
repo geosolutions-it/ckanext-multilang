@@ -68,7 +68,7 @@ To install ckanext-multilang:
    config file (by default the config file is located at ``/etc/ckan/default/production.ini``).
 
 5. If you need different resources bound to different languages, add the ``multilang_resources`` plugin.
-   See also `the related wiki page <https://github.com/geosolutions-it/ckanext-multilang/wiki/Plugin-multilang_resources>_`.
+   See also `the related wiki page <https://github.com/geosolutions-it/ckanext-multilang/wiki/Plugin-multilang_resources>`_.
    
 6. Update the Solr schema.xml file used by CKAN introducing the following elements.
    
