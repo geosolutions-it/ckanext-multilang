@@ -17,7 +17,11 @@ log = logging.getLogger(__name__)
 
 render = base.render
 abort = base.abort
-redirect = base.redirect
+try:
+    redirect = base.redirect
+except AttributeError:
+    # ckan 2.7+
+    redirect = helpers.redirect_to
 
 NotFound = logic.NotFound
 NotAuthorized = logic.NotAuthorized
