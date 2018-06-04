@@ -54,6 +54,9 @@ echo "Creating the PostgreSQL user and database..."
 
 sudo -u postgres psql -c "CREATE USER ckan_default WITH PASSWORD 'pass';"
 sudo -u postgres psql -c 'CREATE DATABASE ckan_test WITH OWNER ckan_default;'
+sudo -u postgres psql -d ckan_test -c 'CREATE EXTENSION postgis;'
+sudo -u postgres psql -d ckan_test -c 'ALTER VIEW geometry_columns OWNER TO ckan_default;'
+sudo -u postgres psql -d ckan_test -c 'ALTER TABLE spatial_ref_sys OWNER TO ckan_default;'
 
 
 echo "Install other libraries required..."
@@ -73,6 +76,13 @@ paster harvester initdb -c ../ckan/test-core.ini
 cd -
 
 
+echo "Installing ckanext-spatial and its requirements..."
+git clone https://github.com/ckan/ckanext-spatial
+cd ckanext-spatial
+python setup.py develop
+pip install -r pip-requirements.txt --allow-all-external
+paster spatial initdb -c ../ckan/test-core.ini
+cd -
 
 echo "Moving test.ini into a subdir..."
 mkdir subdir
