@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/geosolutions-it/ckanext-multilang.svg?branch=master)](https://travis-ci.org/geosolutions-it/ckanext-multilang)
 
 =================
 ckanext-multilang
