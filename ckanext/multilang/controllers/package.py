@@ -1,42 +1,27 @@
 import logging
-import cgi
-
-import ckan 
-
 import ckan.logic as logic
 import ckan.lib.base as base
-import ckan.plugins as p
-import ckan.lib.maintain as maintain
 import ckanext.multilang.helpers as helpers
 
-from pylons import config
-
-from pylons.i18n.translation import get_lang
-
 from urllib import urlencode
-from paste.deploy.converters import asbool
-from ckan.lib.base import request
-from ckan.lib.base import c, g, h
-from ckan.lib.base import model
-from ckan.lib.base import render
-from ckan.lib.base import _
 
 import ckan.lib.navl.dictization_functions as dict_fns
 
-from ckan.lib.navl.validators import not_empty
-
-from ckan.common import OrderedDict, _, json, request, c, g, response
+from ckan.lib.base import h
+from ckan.common import request, c, _
 
 from ckan.controllers.package import PackageController
-from ckanext.multilang.model import PackageMultilang, GroupMultilang, ResourceMultilang, TagMultilang
-
-from ckan.controllers.home import CACHE_PARAMETERS
+from ckanext.multilang.model import PackageMultilang, TagMultilang
 
 log = logging.getLogger(__name__)
 
 render = base.render
 abort = base.abort
-redirect = base.redirect
+try:
+    redirect = base.redirect
+except AttributeError:
+    # ckan 2.7+
+    redirect = h.redirect_to
 
 NotFound = logic.NotFound
 NotAuthorized = logic.NotAuthorized
@@ -47,13 +32,16 @@ clean_dict = logic.clean_dict
 tuplize_dict = logic.tuplize_dict
 parse_params = logic.parse_params
 
+
 def _encode_params(params):
     return [(k, v.encode('utf-8') if isinstance(v, basestring) else str(v))
             for k, v in params]
 
+
 def url_with_params(url, params):
     params = _encode_params(params)
     return url + u'?' + urlencode(params)
+
 
 def search_url(params, package_type=None):
     if not package_type or package_type == 'dataset':
@@ -62,9 +50,10 @@ def search_url(params, package_type=None):
         url = h.url_for('{0}_search'.format(package_type))
     return url_with_params(url, params)
 
+
 class MultilangPackageController(PackageController):
 
-    ## Managed localized fields for Package in package_multilang table
+    # Managed localized fields for Package in package_multilang table
     pkg_localized_fields = [
         'title',
         'notes',
@@ -74,7 +63,7 @@ class MultilangPackageController(PackageController):
     ]
 
     """
-       This controller overrides the core PackageController 
+       This controller overrides the core PackageController
        for dataset list view search and dataset details page
     """
 
@@ -246,7 +235,7 @@ class MultilangPackageController(PackageController):
                     log.debug('::::::::::::::: value after %r', result.text)
                     result.save()
 
-                ## Check for missing localized fields in DB
+                # Check for missing localized fields in DB
                 for field in self.pkg_localized_fields:
                     if field not in pkg_processed_field:
                         if c.pkg_dict.get(field):
