@@ -353,50 +353,24 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
             session = Session
 
             package_id = package_dict.get('id')
-            
+
             # Persisting localized packages 
             try:
-                # rows = session.query(PackageMultilang).filter(PackageMultilang.package_id == package_id).all()
-                rows = PackageMultilang.get_for_package(package_id) 
+                log.info('::::::::: Adding new localised object to the package_multilang table :::::::::')
 
-                if not rows:
-                    log.info('::::::::: Adding new localised object to the package_multilang table :::::::::')
-                    
-                    log.debug('::::: Persisting default metadata locale :::::')
+                loc_titles = self._package_dict.get('localised_titles')
+                if loc_titles:
+                   log.debug('::::: Persisting title locales :::::')
+                   for title in loc_titles:
+                      self.persist_package_multilang_field(package_id, 'title', title.get('text'), title.get('locale'), 'package')
 
-                    loc_titles = self._package_dict.get('localised_titles')
-                    if loc_titles:
-                        log.debug('::::: Persisting title locales :::::')
-                        for title in loc_titles:
-                            PackageMultilang.persist({'id': package_id, 'text': title.get('text'), 'field': 'title'}, title.get('locale'))
+                loc_abstracts = self._package_dict.get('localised_abstracts')
+                if loc_abstracts:
+                   log.debug('::::: Persisting abstract locales :::::')
+                   for abstract in loc_abstracts:
+                      self.persist_package_multilang_field(package_id, 'notes', abstract.get('text'), abstract.get('locale'), 'package')
 
-                    loc_abstracts = self._package_dict.get('localised_abstracts')
-                    if loc_abstracts:
-                        log.debug('::::: Persisting abstract locales :::::')
-                        for abstract in loc_abstracts:
-                            PackageMultilang.persist({'id': package_id, 'text': abstract.get('text'), 'field': 'notes'}, abstract.get('locale'))
-
-                    log.info('::::::::: OBJECT PERSISTED SUCCESSFULLY :::::::::')
-
-                else:
-                    log.info('::::::::: Updating localised object in the package_multilang table :::::::::')
-                    for row in rows:
-                        if row.field == 'title': 
-                            titles = self._package_dict.get('localised_titles')
-                            if titles:
-                                for title in titles:
-                                    if title.get('locale') == row.lang:
-                                        row.text = title.get('text')
-                        elif row.field == 'notes': 
-                            abstracts = self._package_dict.get('localised_abstracts')
-                            if abstracts:
-                                for abstract in abstracts:
-                                    if abstract.get('locale') == row.lang:
-                                        row.text = abstract.get('text')
-
-                        row.save()
-
-                    log.info('::::::::: OBJECT UPDATED SUCCESSFULLY :::::::::') 
+                log.info('::::::::: OBJECT PERSISTED SUCCESSFULLY :::::::::')
 
                 pass
             except Exception, e:
@@ -486,3 +460,15 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
 
         return
+
+    def persist_package_multilang_field(self, package_id, field_name, text, locale, field_type):
+        record = PackageMultilang.get(package_id, field_name, locale, field_type)
+        if record:
+            log.info('::::::::: Updating the localized {0} package field in the package_multilang table :::::::::'.format(field_name))
+            record.text = text
+            record.save()
+            log.info('::::::::: PACKAGE MULTILANG FIELD UPDATED SUCCESSFULLY :::::::::') 
+        else:
+            log.info('::::::::: Adding new localized {0} package field in the package_multilang table :::::::::'.format(field_name))
+            PackageMultilang.persist({'id': package_id, 'text': text, 'field': field_name}, locale, field_type)
+            log.info('::::::::: PACKAGE MULTILANG FIELD PERSISTED SUCCESSFULLY :::::::::')
