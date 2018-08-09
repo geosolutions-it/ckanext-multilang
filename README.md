@@ -13,7 +13,7 @@ In this way Dataset's title and description will automatically change simply swi
  
 The ckanext-multilang provides also an harvester built on top of the ckanext-spatial extension, and inherits all of its functionalities.
 With this harvester, localized content for Dataset in CKAN can be retrieved form CSW metadata that contains the gmd:PT_FreeText XML 
-element (see the `WIKI <https://github.com/geosolutions-it/ckanext-multilang/wiki>`_ for more details).	
+element (see the [WIKI](https://github.com/geosolutions-it/ckanext-multilang/wiki) for more details).	
 
 ## WIKI
 
@@ -29,9 +29,9 @@ http://www.fsf.org/licensing/licenses/agpl-3.0.html
 
 The ckanext-multilang extension has been developed for CKAN 2.4 or later. In addition:
 
-* The CSW multilingual harvester provided by the ckanext-multilang extension requires the `ckanext-spatial plugin <https://github.com/ckan/ckanext-spatial>`_ installed on CKAN (see the `WIKI <https://github.com/geosolutions-it/ckanext-multilang/wiki>`_ for more details about that).
+* The CSW multilingual harvester provided by the ckanext-multilang extension requires the [ckanext-spatial plugin](https://github.com/ckan/ckanext-spatial) installed on CKAN (see the [WIKI](https://github.com/geosolutions-it/ckanext-multilang/wiki) for more details about that).
 
-* The CSW multilingual harvester provided by the ckanext-multilang extension requires the `ckanext-geonetwork plugin <https://github.com/geosolutions-it/ckanext-geonetwork>`_ installed on CKAN if you want to leverage on the advanced harvesting functionalities (see the `WIKI <https://github.com/geosolutions-it/ckanext-multilang/wiki#features>`_ for more details about the multilang harvester).
+* The CSW multilingual harvester provided by the ckanext-multilang extension requires the [ckanext-geonetwork plugin](https://github.com/geosolutions-it/ckanext-geonetwork) installed on CKAN if you want to leverage on the advanced harvesting functionalities (see the [WIKI](https://github.com/geosolutions-it/ckanext-multilang/wiki#features) for more details about the multilang harvester).
 
 ## Installation
 
@@ -58,7 +58,7 @@ To install ckanext-multilang:
    config file (by default the config file is located at ``/etc/ckan/default/production.ini``).
 
 5. If you need different resources bound to different languages, add the ``multilang_resources`` plugin.
-   See also `the related wiki page <https://github.com/geosolutions-it/ckanext-multilang/wiki/Plugin-multilang_resources>`_.
+   See also [the related wiki page](https://github.com/geosolutions-it/ckanext-multilang/wiki/Plugin-multilang_resources).
    
 6. Update the Solr schema.xml file used by CKAN introducing the following elements.
    
