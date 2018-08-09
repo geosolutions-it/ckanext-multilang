@@ -101,4 +101,4 @@ We welcome contributions in any form:
 
 ## Professional Support
 
-The **ckanext-multilang** is provided as is and no warranty whatsoever is provided. Professional Support is available through our `Enterprise Support Services <http://www.geo-solutions.it/enterprise-support-services>`_ offer.
+The **ckanext-multilang** is provided as is and no warranty whatsoever is provided. Professional Support is available through our [Enterprise Support Services](http://www.geo-solutions.it/enterprise-support-services) offer.
