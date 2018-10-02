@@ -229,11 +229,15 @@ class MultilangPackageController(PackageController):
             if q_results:
                 pkg_processed_field = []
                 for result in q_results:
-                    pkg_processed_field.append(result.field)
-                    log.debug('::::::::::::::: value before %r', result.text)
-                    result.text = c.pkg_dict.get(result.field)
-                    log.debug('::::::::::::::: value after %r', result.text)
-                    result.save()
+                    # do not update multilang field if original pkg dict doesn't
+                    # have this field anymore. otherwise IntegrityError will raise
+                    # because text will be None
+                    if c.pkg_dict.has_key(result.field):
+                        pkg_processed_field.append(result.field)
+                        log.debug('::::::::::::::: value before %r', result.text)
+                        result.text = c.pkg_dict.get(result.field)
+                        log.debug('::::::::::::::: value after %r', result.text)
+                        result.save()
 
                 # Check for missing localized fields in DB
                 for field in self.pkg_localized_fields:
