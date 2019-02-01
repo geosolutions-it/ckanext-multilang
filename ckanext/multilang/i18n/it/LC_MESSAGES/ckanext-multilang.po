@@ -8,54 +8,58 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-multilang 0.0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-04-10 19:06+0200\n"
+"POT-Creation-Date: 2019-02-01 15:01+0100\n"
 "PO-Revision-Date: 2018-02-02 17:41+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language: it\n"
 "Language-Team: it <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.4.0\n"
+"Generated-By: Babel 0.9.6\n"
 
-#: ckanext/multilang/plugin.py:333 ckanext/multilang/plugin.py:342
+#: ckanext/multilang/plugin.py:347 ckanext/multilang/plugin.py:356
 msgid "Language"
 msgstr ""
 
-#: ckanext/multilang/plugin.py:343
+#: ckanext/multilang/plugin.py:357
 msgid "Enter language code"
 msgstr ""
 
-#: ckanext/multilang/plugin.py:344
+#: ckanext/multilang/plugin.py:358
 msgid "Set language for which this resource will be visible"
 msgstr ""
 
-#: ckanext/multilang/controllers/package.py:175
-#: ckanext/multilang/controllers/package.py:262
+#: ckanext/multilang/controllers/package.py:164
+#: ckanext/multilang/controllers/package.py:255
 #, python-format
 msgid "Unauthorized to read package %s"
 msgstr ""
 
-#: ckanext/multilang/controllers/package.py:177
-#: ckanext/multilang/controllers/package.py:264
+#: ckanext/multilang/controllers/package.py:166
+#: ckanext/multilang/controllers/package.py:257
 msgid "Dataset not found"
 msgstr ""
 
-#: ckanext/multilang/controllers/package.py:179
-#: ckanext/multilang/controllers/package.py:266
+#: ckanext/multilang/controllers/package.py:168
+#: ckanext/multilang/controllers/package.py:259
 msgid "Integrity Error"
 msgstr ""
 
-#: ckanext/multilang/controllers/package.py:185
+#: ckanext/multilang/controllers/package.py:174
 msgid "Unable to add package to search index."
 msgstr ""
 
-#: ckanext/multilang/controllers/package.py:272
+#: ckanext/multilang/controllers/package.py:265
 msgid "Unable to update search index."
 msgstr ""
 
-#: ckanext/multilang/templates/package/snippets/resource_item_multilang.html:8
-msgid "Available in language"
-msgstr ""
+msgid "All languages"
+msgstr "Tutte le lingue"
+
+msgid "Localized Tag Name"
+msgstr "Nome Tag Localizzato"
+
+#~ msgid "Available in language"
+#~ msgstr ""
 
