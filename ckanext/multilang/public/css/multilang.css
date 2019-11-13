@@ -1,4 +1,3 @@
-
 label[for$="-remove-extra-tag"]{
-	visibility: hidden;
+	display: none;
 }

@@ -1,0 +1,5 @@
+multilang:
+  output: css/%(version)s_multilang.css
+  filters: cssrewrite
+  contents:
+    - multilang.css
