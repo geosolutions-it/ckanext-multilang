@@ -37,7 +37,9 @@ class Multilang(CkanCommand):
             sys.exit(1)
         cmd = self.args[0]
         if cmd == 'initdb':
-            self.initdb()    
+            self.initdb()
+        elif cmd == "initsearch":
+            self.initsearch()
         else:
             print 'Command %s not recognized' % cmd
 
@@ -47,4 +49,39 @@ class Multilang(CkanCommand):
         db_setup()
 
         #print 'Multilingual DB tables created'
+
+    def initsearch(self):
+        from ckan.lib.search.common import make_connection
+        dynamic_fields = {
+            "package_multilang_localized_*":
+        }
+
+        copy_fields = {
+            "associated_tasks": b'{"add-copy-field":{"source": '
+                                b'"associated_tasks",  "dest": "text"}}',
+            "collection_period": b'{"add-copy-field":{"source": '
+                                 b'"collection_period",  "dest": "text"}}',
+            "geographical_area": b'{"add-copy-field":{"source": '
+                                 b'"geographical_area",  "dest": "text"}}',
+            "pkg_description": b'{"add-copy-field":{"source": '
+                               b'"pkg_description",  "dest": "text"}}'
+        }
+
+        conn = make_connection()
+        path = "schema"
+        dynamic_field = b'{"add-dynamic-field": {"name": ' \
+                        b'"package_multilang_localized_*",' \
+                        b'"type": "text", "indexed": "true", ' \
+                        b'"stored": "true", "multiValued": "false"}}'
+        res = conn._send_request("post", path, dynamic_field)
+        log.debug("Result of dynamic field addition {result}".format(
+            result=res))
+
+        copy_field = b'{"add-copy-field":{' \
+                     b'"source": "package_multilang_localized_*",  ' \
+                     b'"dest": "text"}}'
+
+        res = conn._send_request("post", path, copy_field)
+        log.debug("Result of copy field addition {result}".format(result=res))
+        pass
 
