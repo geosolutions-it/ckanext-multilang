@@ -1,0 +1,45 @@
+# Translations template for ckanext-multilang.
+# Copyright (C) 2019 ORGANIZATION
+# This file is distributed under the same license as the ckanext-multilang
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2019.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: ckanext-multilang 0.0.1\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2019-02-01 15:01+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 0.9.6\n"
+
+#: ckanext/multilang/plugin.py:357
+msgid "Enter language code"
+msgstr "Entrez le code de langue"
+
+#: ckanext/multilang/plugin.py:358
+msgid "Set language for which this resource will be visible"
+msgstr "Définir la langue pour laquelle cette ressource sera visible"
+
+#: ckanext/multilang/controllers/package.py:164
+#: ckanext/multilang/controllers/package.py:255
+#, python-format
+msgid "Unauthorized to read dataset %s"
+msgstr "Non autorisé à lire le jeu de données %s"
+
+#: ckanext/multilang/templates/package/snippets/resource_additional_fields.html:41
+msgid "All languages"
+msgstr "Toutes les langues"
+
+#: ckanext/multilang/templates/package/snippets/package_basic_fields.html:14
+#: ckanext/multilang/templates/package/snippets/package_basic_fields.html:32
+msgid "Tag translations"
+msgstr "Balises traductions"
+
+#: /ckanext/multilang/templates/macros/form_macros.html:71
+msgid "Key"
+msgstr "Clé"

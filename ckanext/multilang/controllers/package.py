@@ -161,7 +161,7 @@ class MultilangPackageController(PackageController):
 
             self._form_save_redirect(pkg_dict['name'], 'new', package_type=package_type)
         except NotAuthorized:
-            abort(401, _('Unauthorized to read package %s') % '')
+            abort(401, _('Unauthorized to read dataset %s') % '')
         except NotFound, e:
             abort(404, _('Dataset not found'))
         except dict_fns.DataError:
@@ -252,7 +252,7 @@ class MultilangPackageController(PackageController):
 
             self._form_save_redirect(pkg['name'], 'edit', package_type=package_type)
         except NotAuthorized:
-            abort(401, _('Unauthorized to read package %s') % id)
+            abort(401, _('Unauthorized to read dataset %s') % id)
         except NotFound, e:
             abort(404, _('Dataset not found'))
         except dict_fns.DataError:

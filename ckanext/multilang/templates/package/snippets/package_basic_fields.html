@@ -11,7 +11,7 @@
       {{ form_macros.custom_tag(
         names=(prefix ~ 'key', prefix ~ 'value', prefix ~ 'deleted'),
         id='field-extra-tag-%d' % loop.index,
-        label=_('Localized Tag Name'),
+        label=_('Tag translations'),
         values=(tag.name, tag.display_name, False),
         error=errors[prefix ~ 'key'] or errors[prefix ~ 'value'],
         attrs={'readonly': 'true'}
@@ -29,7 +29,7 @@
       {{ form.custom(
         names=(prefix ~ 'key', prefix ~ 'value', prefix ~ 'deleted'),
         id='field-extra-tag-%d' % index,
-        label=_('Localized Tag Name'),
+        label=_('Tag translations'),
         values=('', '', False),
         error=errors[prefix ~ 'key'] or errors[prefix ~ 'value']
       ) }}

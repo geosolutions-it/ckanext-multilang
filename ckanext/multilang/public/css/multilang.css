@@ -1,3 +1,7 @@
-label[for$="-remove-extra-tag"]{
-	display: none;
+/*label[for$="-remove-extra-tag"]{*/
+/*	display: none !important;*/
+/*}*/
+
+label.tag-remove-button {
+	display: none !important;
 }
