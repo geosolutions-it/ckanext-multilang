@@ -52,20 +52,6 @@ class Multilang(CkanCommand):
 
     def initsearch(self):
         from ckan.lib.search.common import make_connection
-        dynamic_fields = {
-            "package_multilang_localized_*":
-        }
-
-        copy_fields = {
-            "associated_tasks": b'{"add-copy-field":{"source": '
-                                b'"associated_tasks",  "dest": "text"}}',
-            "collection_period": b'{"add-copy-field":{"source": '
-                                 b'"collection_period",  "dest": "text"}}',
-            "geographical_area": b'{"add-copy-field":{"source": '
-                                 b'"geographical_area",  "dest": "text"}}',
-            "pkg_description": b'{"add-copy-field":{"source": '
-                               b'"pkg_description",  "dest": "text"}}'
-        }
 
         conn = make_connection()
         path = "schema"
