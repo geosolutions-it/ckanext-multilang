@@ -23,7 +23,7 @@ _ = toolkit._
 class MultilangPlugin(plugins.SingletonPlugin, DefaultTranslation):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
-    plugins.implements(plugins.IRoutes, inherit=True)
+    # plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IGroupController, inherit=True)
     plugins.implements(plugins.IOrganizationController, inherit=True)
