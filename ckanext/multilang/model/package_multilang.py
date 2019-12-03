@@ -47,10 +47,11 @@ tag_multilang_table = Table('tag_multilang', meta.metadata,
     Column('lang', types.UnicodeText, nullable=False, index=True),
     Column('text', types.UnicodeText, nullable=False, index=True))
 
+
 def setup():
     log.debug('Multilingual tables defined in memory')
 
-    #Setting up package multilang table
+    # Setting up package multilang table
     if not package_multilang_table.exists():
         try:
             package_multilang_table.create()
@@ -66,7 +67,7 @@ def setup():
     else:
         log.info('Package Multilingual table already exist')
     
-    #Setting up group multilang table
+    # Setting up group multilang table
     if not group_multilang_table.exists():
         try:
             group_multilang_table.create()
@@ -82,7 +83,7 @@ def setup():
     else:
         log.info('Group Multilingual table already exist')
 
-    #Setting up resource multilang table
+    # Setting up resource multilang table
     if not resource_multilang_table.exists():
         try:
             resource_multilang_table.create()
@@ -98,7 +99,7 @@ def setup():
     else:
         log.info('Resource Multilingual table already exist')
 
-    #Setting up tag multilang table
+    # Setting up tag multilang table
     if not tag_multilang_table.exists():
         try:
             tag_multilang_table.create()
@@ -113,6 +114,7 @@ def setup():
         log.info('Tag Multilingual table created')
     else:
         log.info('Tag Multilingual table already exist')
+
 
 class PackageMultilang(DomainObject):
     def __init__(self, package_id=None, field=None, field_type=None, lang=None, text=None):
@@ -157,7 +159,9 @@ class PackageMultilang(DomainObject):
             log.error('Exception occurred while persisting DB objects: %s', e)
             raise
 
+
 meta.mapper(PackageMultilang, package_multilang_table)
+
 
 class GroupMultilang(DomainObject):
     def __init__(self, group_id=None, name=None, field=None, lang=None, text=None):
@@ -209,7 +213,9 @@ class GroupMultilang(DomainObject):
             log.error('Exception occurred while persisting DB objects: %s', e)
             raise
 
+
 meta.mapper(GroupMultilang, group_multilang_table)
+
 
 class ResourceMultilang(DomainObject):
     def __init__(self, resource_id=None, field=None, lang=None, text=None):
@@ -274,7 +280,9 @@ class ResourceMultilang(DomainObject):
             log.error('Exception occurred while persisting DB objects: %s', e)
             raise
 
+
 meta.mapper(ResourceMultilang, resource_multilang_table)
+
 
 class TagMultilang(DomainObject):
     def __init__(self, tag_id=None, tag_name=None, lang=None, text=None):
@@ -325,5 +333,6 @@ class TagMultilang(DomainObject):
 
             log.error('Exception occurred while persisting DB objects: %s', e)
             raise
+
 
 meta.mapper(TagMultilang, tag_multilang_table)
