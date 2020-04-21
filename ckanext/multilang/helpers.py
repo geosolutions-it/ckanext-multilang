@@ -6,6 +6,7 @@ import ckan.model as model
 import ckan.plugins as p
 import ckan.lib.search as search
 import ckan.lib.helpers as h
+from ckan.lib.base import config
 
 import ckan.logic as logic
 
@@ -23,6 +24,9 @@ def getLanguage():
         else:
             lang = unicode(lang)
     return lang
+
+def enable_tag_localization():
+    return eval(config.get('enable_tag_localization', 'False'))
 
 def get_localized_pkg(pkg_dict):
     if pkg_dict != '' and 'type' in pkg_dict:
