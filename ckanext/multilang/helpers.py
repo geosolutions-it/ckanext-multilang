@@ -35,7 +35,7 @@ def get_localized_pkg(pkg_dict):
 
         #  MULTILANG - Localizing Tags display names in Facet list
         tags = pkg_dict.get('tags')
-        if tags:
+        if tags and eval(config.get('enable_tag_localization', 'False')):
             for tag in tags:
                 localized_tag = TagMultilang.by_name(tag.get('name'), lang)
 
