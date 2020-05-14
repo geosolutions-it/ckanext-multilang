@@ -76,6 +76,8 @@ To install ckanext-multilang:
 8. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
 
      sudo service apache2 reload
+     
+>**_TIP:_** You can also enable/disable tag localization using the `multilang.enable_tag_localization` (with default `False`) settings tag by settings it to boolean True/False.
 
 ## Development Installation
 
