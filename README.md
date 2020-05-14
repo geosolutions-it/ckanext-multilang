@@ -77,7 +77,7 @@ To install ckanext-multilang:
 
      sudo service apache2 reload
      
->**_TIP:_** You can also enable/disable tag localization using the `multilang.enable_tag_localization` (with default `False`) settings tag by settings it to boolean True/False.
+>**_TIP:_** You can also enable/disable tag localization using the `multilang.enable_tag_localization` (with default `False`) settings key (in `prodcution.ini`) by settings it to boolean `True/False`.
 
 ## Development Installation
 
