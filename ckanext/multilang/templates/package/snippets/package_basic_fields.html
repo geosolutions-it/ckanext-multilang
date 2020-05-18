@@ -5,6 +5,7 @@
 {% block package_basic_fields_tags %} 
   {{ super() }}
 
+{% if h.is_tag_loc_enabled() %}
   <div data-module="custom-fields">
     {% for tag in data.tags %}
       {% set prefix = 'extra_tag__%d__' % loop.index0 %}
@@ -15,7 +16,7 @@
         values=(tag.name, tag.display_name, False),
         error=errors[prefix ~ 'key'] or errors[prefix ~ 'value'],
         attrs={'readonly': 'true'}
-      ) }}  
+      ) }}
     {% endfor %}
 
     {# Add a max of 1 empty columns #}
@@ -35,6 +36,7 @@
       ) }}
     {% endfor %}
   </div>
+{% endif %}
 {% endblock %}
 
 {% block package_basic_fields_org %}

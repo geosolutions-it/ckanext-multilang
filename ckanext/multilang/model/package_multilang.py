@@ -284,6 +284,13 @@ class TagMultilang(DomainObject):
         self.text = text
 
     @classmethod
+    def get_all(cls, tag_name, tag_lang=None):
+        query = meta.Session.query(TagMultilang).filter(TagMultilang.tag_name == tag_name)
+        if tag_lang:
+            query = query.filter(TagMultilang.lang == tag_lang)
+        return query
+
+    @classmethod
     def by_name(self, tag_name, tag_lang, autoflush=True):
         query = meta.Session.query(TagMultilang).filter(TagMultilang.tag_name==tag_name, TagMultilang.lang==tag_lang)
         query = query.autoflush(autoflush)
@@ -313,9 +320,9 @@ class TagMultilang(DomainObject):
     def persist(self, tag, lang):
         session = meta.Session
         try:
-            session.add_all([
+            session.add(
                 TagMultilang(tag_id=tag.get('id'), tag_name=tag.get('name'), lang=lang, text=tag.get('text')),
-            ])
+            )
 
             session.commit()
         except Exception, e:
@@ -325,5 +332,25 @@ class TagMultilang(DomainObject):
 
             log.error('Exception occurred while persisting DB objects: %s', e)
             raise
+
+    @classmethod
+    def save_tags(cls, *tags):
+        session = meta.Session
+        try:
+            session.add_all([
+                TagMultilang(
+                    tag_id=tag.get(u'id'), tag_name=tag.get(u'name'), lang=tag.get(u'lang'), text=tag.get(u'text'))
+                for tag in tags
+            ])
+
+            session.commit()
+        except Exception, e:
+            # on rollback, the same closure of state
+            # as that of commit proceeds.
+            session.rollback()
+
+            log.error('Exception occurred while persisting DB objects: %s', e)
+            raise
+
 
 meta.mapper(TagMultilang, tag_multilang_table)

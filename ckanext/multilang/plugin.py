@@ -39,7 +39,8 @@ class MultilangPlugin(plugins.SingletonPlugin):
         return {
             'get_localized_pkg': helpers.get_localized_pkg,
             'get_localized_group': helpers.get_localized_group,
-            'get_localized_resource': helpers.get_localized_resource
+            'get_localized_resource': helpers.get_localized_resource,
+            'is_tag_loc_enabled': helpers.is_tag_loc_enabled,
         }
 
     def get_actions(self):
@@ -85,7 +86,7 @@ class MultilangPlugin(plugins.SingletonPlugin):
                 #  MULTILANG - Localizing Datasets names and descriptions in search list
                 #  MULTILANG - Localizing Tags display names in Facet list
                 tags = odict.get('tags')
-                if tags:
+                if tags and helpers.is_tag_loc_enabled():
                     for tag in tags:
                         localized_tag = TagMultilang.by_tag_id(tag.get('id'), lang)
 
