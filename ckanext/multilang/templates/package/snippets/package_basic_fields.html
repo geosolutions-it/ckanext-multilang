@@ -6,7 +6,7 @@
   {{ super() }}
 
 {% if h.is_tag_loc_enabled() %}
-  <div data-module="custom-fields">
+  <div data-module="custom-fields" style="margin-bottom: 4%">
     {% for tag in data.tags %}
       {% set prefix = 'extra_tag__%d__' % loop.index0 %}
       {{ form_macros.custom_tag(
@@ -24,19 +24,67 @@
     {% set empty_extras = (limit or 1) - total_extras %}
     {% if empty_extras <= 0 %}{% set empty_extras = 1 %}{% endif %}
 
-    {% for extra in range(total_extras, total_extras + empty_extras) %}
+        {% for extra in range(total_extras, total_extras + empty_extras) %}
       {% set index = loop.index0 + (data.tags|count) %}
       {% set prefix = 'extra_tag__%d__' % index %}
-      {{ form.custom(
-        names=(prefix ~ 'key', prefix ~ 'value', prefix ~ 'deleted'),
-        id='field-extra-tag-%d' % index,
-        label=_('Localized Tag Name'),
-        values=('', '', False),
-        error=errors[prefix ~ 'key'] or errors[prefix ~ 'value']
-      ) }}
-    {% endfor %}
+
+<div class="form-group control-custom" style="margin-bottom: 0px;">
+	<label class="control-label" for="field-extra-tag-{{index + 1}}-key">{{ _('Localized Tag Name') }}</label>
+	<div class="controls editor">
+      <div style="display: flex">
+		<div class="row" style="width: 100%;">
+			<div class="col-md-6">
+				<div class="input-group">
+					<label for="field-extra-tag-{{index + 1}}-key" class="input-group-addon">{{ _('Key') }}</label>
+					<select style="padding: 0px;" index="{{ index }}" class="form-control" id="field-extra-tag-{{index + 1}}-key" type="text" name="extra_tag__{{index}}__key" value="" placeholder="">
+                    </select>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="input-group">
+						<label for="field-extra-tag-{{ index }}-value" class="input-group-addon">{{ _('Value') }}</label>
+						<input class="form-control" id="field-extra-tag-{{ index }}-value" type="text" name="extra_tag__{{ index }}__value" value="" placeholder="">
+						</div>
+					</div>
+				</div>
+			</div>
+        </div>
+    </div>
+  </div>
+{% endfor %}
   </div>
 {% endif %}
+<script>
+  document.addEventListener("DOMContentLoaded", function(){
+    $("#field-tags").change(function () {
+        let available_tags = document.getElementById('field-tags').value;
+        available_tags = available_tags.split(',');
+        const tags = available_tags.filter(function (item, i) {
+          const element = document.getElementById(`field-extra-tag-${+i + 1}-key`);
+          const dom_availability = element ? !element.value && true : !element;
+          return dom_availability;
+        });
+
+        const options = tags.map(function (tag) {
+          return(`<option value="${tag}">${tag}</option>`);
+        }).join('');
+
+        var i;
+        for (i = (+available_tags.length - +tags.length); i < +available_tags.length + 1; i++) {
+          const id = `field-extra-tag-${i}-key`;
+          const element = document.getElementById(id);
+          if (element){
+            if (options){
+              element.innerHTML = `<option value="">---------------</option>${options}`;
+            }
+            else {
+              element.innerHTML = '<option></option>'
+            }
+          }
+        }
+    })
+});
+</script>
 {% endblock %}
 
 {% block package_basic_fields_org %}
@@ -111,3 +159,4 @@
   {% endif %}
 
 {% endblock %}
+
