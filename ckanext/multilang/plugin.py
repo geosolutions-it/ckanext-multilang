@@ -1,24 +1,29 @@
 import logging
-from babel.core import Locale
-from pylons.i18n import get_lang
-from routes.mapper import SubMapper, Mapper as _Mapper
 
-from ckan.lib import helpers as h
-from ckan.lib.base import config
+from babel.core import Locale
+
 import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.model as model
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
-
-import ckanext.multilang.helpers as helpers
 import ckanext.multilang.actions as actions
-from ckanext.multilang.model import PackageMultilang, GroupMultilang, TagMultilang, ResourceMultilang
+import ckanext.multilang.helpers as helpers
+from ckan.common import _, config, g, session
+from ckan.lib import helpers as h
+
+from ckanext.multilang.commands import cli
+from ckanext.multilang.model import (
+    GroupMultilang,
+    PackageMultilang,
+    ResourceMultilang,
+    TagMultilang,
+)
 
 log = logging.getLogger(__name__)
 
-_ = toolkit._
 
-class MultilangPlugin(plugins.SingletonPlugin):
+class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
+    plugins.implements(plugins.IClick)
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IRoutes, inherit=True)
@@ -27,6 +32,11 @@ class MultilangPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IOrganizationController, inherit=True)
     plugins.implements(plugins.IResourceController, inherit=True)
     plugins.implements(plugins.IActions, inherit=True)
+
+    def get_commands(self):
+        return [
+            cli.multilang
+        ]
 
     # IConfigurer
     def update_config(self, config_):
@@ -65,7 +75,7 @@ class MultilangPlugin(plugins.SingletonPlugin):
 
         return pkg_dict
 
-    def before_view(self, odict):        
+    def before_view(self, odict):
         otype = odict.get('type')
         lang = helpers.getLanguage()
 
@@ -73,14 +83,13 @@ class MultilangPlugin(plugins.SingletonPlugin):
             if otype == 'group' or otype == 'organization':
                 #  MULTILANG - Localizing Group/Organizzation names and descriptions in search list
                 # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == odict.get('id'), GroupMultilang.lang == lang).all()
-                q_results = GroupMultilang.get_for_group_id_and_lang(odict.get('id'), lang) 
+                q_results = GroupMultilang.get_for_group_id_and_lang(odict.get('id'), lang)
 
                 if q_results:
                     for result in q_results:
                         odict[result.field] = result.text
                         if result.field == 'title':
                             odict['display_name'] = result.text
-
 
             elif otype == 'dataset':
                 #  MULTILANG - Localizing Datasets names and descriptions in search list
@@ -95,29 +104,29 @@ class MultilangPlugin(plugins.SingletonPlugin):
 
                 #  MULTILANG - Localizing package sub dict for the dataset read page
                 # q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == odict['id'], PackageMultilang.lang == lang).all()
-                q_results = PackageMultilang.get_for_package_id_and_lang(odict.get('id'), lang) 
+                q_results = PackageMultilang.get_for_package_id_and_lang(odict.get('id'), lang)
 
                 if q_results:
                     for result in q_results:
-                    	if odict.get(result.field, None):
-                    		odict[result.field] = result.text
-                    	else:
-                    		extras = odict.get('extras', None)
-                    		if extras and len(extras) > 0:
-                    			for extra in extras:
-                    				extra_key = extra.get('key', None)
-                    				if extra_key and extra_key == result.field:
-                    					extra['value'] = result.text
+                        if odict.get(result.field, None):
+                            odict[result.field] = result.text
+                        else:
+                            extras = odict.get('extras', None)
+                            if extras and len(extras) > 0:
+                                for extra in extras:
+                                    extra_key = extra.get('key', None)
+                                    if extra_key and extra_key == result.field:
+                                        extra['value'] = result.text
 
-                        #if result.field == 'notes':
+                        # if result.field == 'notes':
                         #    odict['notes'] = result.text
 
                 #  MULTILANG - Localizing organization sub dict for the dataset read page
                 organization = odict.get('organization')
                 if organization:
-                    # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == organization.get('id'), GroupMultilang.lang == lang).all() 
+                    # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == organization.get('id'), GroupMultilang.lang == lang).all()
                     q_results = GroupMultilang.get_for_group_id_and_lang(organization.get('id'), lang)
-                    
+
                     if q_results:
                         for result in q_results:
                             organization[result.field] = result.text
@@ -130,7 +139,7 @@ class MultilangPlugin(plugins.SingletonPlugin):
                     for resource in resources:
                         # q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource.get('id'), ResourceMultilang.lang == lang).all()
                         q_results = ResourceMultilang.get_for_resource_id_and_lang(resource.get('id'), lang)
-                
+
                         if q_results:
                             for result in q_results:
                                 resource[result.field] = result.text
@@ -150,13 +159,13 @@ class MultilangPlugin(plugins.SingletonPlugin):
 
                     if localized_tag:
                         tag['display_name'] = localized_tag.text
-            
+
             if 'organization' in search_facets:
                 #  MULTILANG - Localizing Organizations display names in Facet list
                 organizations = search_facets.get('organization')
                 for org in organizations.get('items'):
                     # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.name == org.get('name'), GroupMultilang.lang == lang).all()
-                    q_results = GroupMultilang.get_for_group_name_and_lang(org.get('name'), lang) 
+                    q_results = GroupMultilang.get_for_group_name_and_lang(org.get('name'), lang)
 
                     if q_results:
                         for result in q_results:
@@ -179,13 +188,13 @@ class MultilangPlugin(plugins.SingletonPlugin):
         return search_results
 
     ## ##############
-    ## CREATE 
+    # CREATE
     ## ##############
     def create(self, model_obj):
         otype = model_obj.type
         lang = helpers.getLanguage()
 
-        ## CREATE GROUP OR ORGANIZATION
+        # CREATE GROUP OR ORGANIZATION
         if otype == 'group' or otype == 'organization' and lang:
             log.info('::::: Persisting localised metadata locale :::::')
             lang = helpers.getLanguage()
@@ -195,13 +204,13 @@ class MultilangPlugin(plugins.SingletonPlugin):
             GroupMultilang.persist(group, lang)
 
     ## ##############
-    ## EDIT
+    # EDIT
     ## ##############
-    def edit(self, model_obj):     
+    def edit(self, model_obj):
         otype = model_obj.type
         lang = helpers.getLanguage()
 
-        ## EDIT GROUP OR ORGANIZATION
+        # EDIT GROUP OR ORGANIZATION
         if otype == 'group' or otype == 'organization' and lang:
             group = model_dictize.group_dictize(model_obj, {'model': model, 'session': model.Session})
 
@@ -234,16 +243,16 @@ class MultilangPlugin(plugins.SingletonPlugin):
             if create_new == True:
                 log.info(':::::::::::: Localized fields are missing in package_multilang table, persisting defaults using values in the table group :::::::::::::::')
                 GroupMultilang.persist(group, lang)
-        
+
     ## ##############
-    ## DELETE
+    # DELETE
     ## ##############
     def delete(self, model_obj):
         return model_obj
 
     def before_show(self, resource_dict):
         lang = helpers.getLanguage()
-        if lang:            
+        if lang:
             #  MULTILANG - Localizing resources dict
             # q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource_dict.get('id'), ResourceMultilang.lang == lang).all()
             q_results = ResourceMultilang.get_for_resource_id_and_lang(resource_dict.get('id'), lang)
@@ -297,7 +306,7 @@ class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetFo
         # Return True to register this plugin as the default handler for
         # package types not handled by any other IDatasetForm plugin.
         return True
-        
+
     def package_types(self):
         # This plugin doesn't handle any special package types, it just
         # registers itself as the default (above).
@@ -310,16 +319,16 @@ class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetFo
     def create_package_schema(self):
         schema = super(MultilangResourcesPlugin, self).create_package_schema()
         return MultilangResourcesAux.update_schema(schema)
-        
+
     def update_package_schema(self):
         schema = super(MultilangResourcesPlugin, self).update_package_schema()
         return MultilangResourcesAux.update_schema(schema)
-        
+
     def read_template(self):
         return MultilangResourcesAux.read_template()
-    
+
     def resource_form(self):
-        return MultilangResourcesAux.resource_form();
+        return MultilangResourcesAux.resource_form()
 
     def get_helpers(self):
         return MultilangResourcesAux.get_helpers()
@@ -345,18 +354,18 @@ class MultilangResourcesAux():
         new_out = []
         for key, val in items:
             if key == 'lang' and val:
-                key = _("Language")
+                key = _('Language')
                 loc = Locale(val)
-                val = u'{} [{}]'.format(loc.display_name or loc.english_name, str(loc))
+                val = '{} [{}]'.format(loc.display_name or loc.english_name, str(loc))
             new_out.append((key, val))
         return new_out
-    
+
     def _get_resource_schema(self):
         return [{'name': 'lang',
                  'type': 'vocabulary',
-                 'label': _("Language"),
-                 'placeholder': _("Enter language code"),
-                 'help': _("Set language for which this resource will be visible"),
+                 'label': _('Language'),
+                 'placeholder': _('Enter language code'),
+                 'help': _('Set language for which this resource will be visible'),
                  'validators': ['ignore_missing']}]
 
     def update_schema(self, schema):
@@ -368,10 +377,10 @@ class MultilangResourcesAux():
         res.update(res_schema)
         schema['resources'] = res
         return schema
-        
+
     def read_template(self):
         return 'package/read_multilang.html'
-    
+
     def resource_form(self):
         return 'package/snippets/resource_form_multilang.html'
 

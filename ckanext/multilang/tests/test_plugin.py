@@ -1,5 +1,7 @@
-"""Tests for plugin.py."""
-import ckanext.multilang.plugin as plugin
+import unittest
+from ckanext.multilang.plugin import MultilangPlugin
 
-def test_plugin():
-    pass
+
+class TestPlugin(unittest.TestCase):
+    def test_plugin(self):
+        self.assertTrue(MultilangPlugin())

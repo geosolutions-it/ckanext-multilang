@@ -2,18 +2,18 @@
 
 # ckanext-multilang
 
-The ckanext-multilang CKAN's extension provides a way to localize your CKAN's title and description 
-contents for: Dataset, Resources, Tags, Organizations and Groups. This extension creates some new DB tables for this purpose 
+The ckanext-multilang CKAN's extension provides a way to localize your CKAN's title and description
+contents for: Dataset, Resources, Tags, Organizations and Groups. This extension creates some new DB tables for this purpose
 containing localized contents in base of the configured CKAN's locales in configuration (the production.ini file).
-So,  accessing the CKAN's GUI in 'en', for example, the User can create a new Dataset and automatically new localized records 
-for that language will be created  in the multilang tables. In the same way, changing the GUI's language, from the CKAN's language 
-dropdown, the user will be able to edit again the same Dataset in order to specify 'title' and 'description' of the Dataset for the 
+So,  accessing the CKAN's GUI in 'en', for example, the User can create a new Dataset and automatically new localized records
+for that language will be created  in the multilang tables. In the same way, changing the GUI's language, from the CKAN's language
+dropdown, the user will be able to edit again the same Dataset in order to specify 'title' and 'description' of the Dataset for the
 new selected language.
 In this way Dataset's title and description will automatically change simply switching the language from the CKAN's dropdonw.
- 
+
 The ckanext-multilang provides also an harvester built on top of the ckanext-spatial extension, and inherits all of its functionalities.
-With this harvester, localized content for Dataset in CKAN can be retrieved form CSW metadata that contains the gmd:PT_FreeText XML 
-element (see the [WIKI](https://github.com/geosolutions-it/ckanext-multilang/wiki) for more details).	
+With this harvester, localized content for Dataset in CKAN can be retrieved form CSW metadata that contains the gmd:PT_FreeText XML
+element (see the [WIKI](https://github.com/geosolutions-it/ckanext-multilang/wiki) for more details).
 
 ## WIKI
 
@@ -41,13 +41,13 @@ To install ckanext-multilang:
 1. Activate your CKAN virtual environment, for example:
 
      . /usr/lib/ckan/default/bin/activate
-     
+
 2. Go into your CKAN path for extension (like /usr/lib/ckan/default/src):
 
     git clone https://github.com/geosolutions-it/ckanext-multilang.git
-    
+
     cd ckanext-multilang
-    
+
     pip install -e .
 
 3. Initialize the DB with the mandatory Tables needed for localized records:
@@ -59,17 +59,17 @@ To install ckanext-multilang:
 
 5. If you need different resources bound to different languages, add the ``multilang_resources`` plugin.
    See also [the related wiki page](https://github.com/geosolutions-it/ckanext-multilang/wiki/Plugin-multilang_resources).
-   
+
 6. Update the Solr schema.xml file used by CKAN introducing the following elements.
-   
+
    **Inside the 'fields' Tag**:
-   
+
           <dynamicField name="package_multilang_localized_*" type="text" indexed="true" stored="true" multiValued="false"/>
-   
+
    **A new 'copyField' to append**:
-   
+
           <copyField source="package_multilang_localized_*" dest="text"/>
-      
+
 
 7. Restart Solr.
 
@@ -82,9 +82,9 @@ To install ckanext-multilang:
 To install `ckanext-multilang` for development, activate your CKAN virtualenv and do:
 
     git clone https://github.com/geosolutions-it/ckanext-multilang.git
-    
+
     cd ckanext-multilang
-    
+
     python setup.py develop
 
     pip install -r dev-requirements.txt

@@ -1,28 +1,23 @@
 import logging
-import operator
 
-import ckan
-import ckan.model as model
-import ckan.plugins as p
-import ckan.lib.search as search
-import ckan.lib.helpers as h
-from ckan.lib.base import config
-
-import ckan.logic as logic
-
+from ckan.common import config
 from ckan.lib.i18n import get_lang
-from ckanext.multilang.model import PackageMultilang, GroupMultilang, TagMultilang, ResourceMultilang
+from ckanext.multilang.model import (
+    GroupMultilang,
+    PackageMultilang,
+    ResourceMultilang,
+    TagMultilang,
+)
 
 log = logging.getLogger(__file__)
 
+
 def getLanguage():
     lang = get_lang()
-    
+
     if lang is not None:
         if isinstance(lang, list):
-            lang = unicode(lang[0])
-        else:
-            lang = unicode(lang)
+            lang = lang[0]
     return lang
 
 
@@ -45,7 +40,7 @@ def get_localized_pkg(pkg_dict):
                     tag['display_name'] = localized_tag.text
 
         # q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == pkg_dict.get('id'), PackageMultilang.lang == lang).all()
-        q_results = PackageMultilang.get_for_package_id_and_lang(pkg_dict.get('id'), lang) 
+        q_results = PackageMultilang.get_for_package_id_and_lang(pkg_dict.get('id'), lang)
 
         if q_results:
             for result in q_results:
@@ -65,11 +60,12 @@ def get_localized_pkg(pkg_dict):
 
     return pkg_dict
 
+
 def get_localized_group(org_dict):
     #  MULTILANG - Localizing group dict
     if org_dict != '' and 'type' in org_dict:
         lang = getLanguage()
-        
+
         # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == org_dict.get('id'), GroupMultilang.lang == lang).all()
         q_results = GroupMultilang.get_for_group_id_and_lang(org_dict.get('id'), lang)
 
@@ -80,6 +76,7 @@ def get_localized_group(org_dict):
                     org_dict['display_name'] = result.text
 
     return org_dict
+
 
 def get_localized_resource(resource_dict):
     #  MULTILANG - Localizing resource dict

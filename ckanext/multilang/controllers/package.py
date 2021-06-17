@@ -1,27 +1,24 @@
 import logging
-import ckan.logic as logic
+from urllib.parse import urlencode
+
 import ckan.lib.base as base
-import ckanext.multilang.helpers as helpers
-
-from urllib import urlencode
-
 import ckan.lib.navl.dictization_functions as dict_fns
-
-from ckan.lib.base import h
-from ckan.common import request, c, _
-
+import ckan.logic as logic
+from ckan.common import _, c, request
 from ckan.controllers.package import PackageController
+from ckan.lib import helpers
+from ckan.lib.base import h, abort
+from ckan.plugins.toolkit import get_action
+
+import ckanext.multilang.helpers as helpers
 from ckanext.multilang.model import PackageMultilang, TagMultilang
 
 log = logging.getLogger(__name__)
 
 render = base.render
-abort = base.abort
-try:
-    redirect = base.redirect
-except AttributeError:
-    # ckan 2.7+
-    redirect = h.redirect_to
+
+redirect = h.redirect_to
+
 
 NotFound = logic.NotFound
 NotAuthorized = logic.NotAuthorized
@@ -34,13 +31,13 @@ parse_params = logic.parse_params
 
 
 def _encode_params(params):
-    return [(k, v.encode('utf-8') if isinstance(v, basestring) else str(v))
+    return [(k, v.encode('utf-8') if isinstance(v, str) else str(v))
             for k, v in params]
 
 
 def url_with_params(url, params):
     params = _encode_params(params)
-    return url + u'?' + urlencode(params)
+    return url + '?' + urlencode(params)
 
 
 def search_url(params, package_type=None):
@@ -162,17 +159,17 @@ class MultilangPackageController(PackageController):
             self._form_save_redirect(pkg_dict['name'], 'new', package_type=package_type)
         except NotAuthorized:
             abort(401, _('Unauthorized to read package %s') % '')
-        except NotFound, e:
+        except NotFound as e:
             abort(404, _('Dataset not found'))
         except dict_fns.DataError:
-            abort(400, _(u'Integrity Error'))
-        except SearchIndexError, e:
+            abort(400, _('Integrity Error'))
+        except SearchIndexError as e:
             try:
-                exc_str = unicode(repr(e.args))
+                exc_str = repr(e.args)
             except Exception:  # We don't like bare excepts
-                exc_str = unicode(str(e))
-            abort(500, _(u'Unable to add package to search index.') + exc_str)
-        except ValidationError, e:
+                exc_str = str(e)
+            abort(500, _('Unable to add package to search index.') + exc_str)
+        except ValidationError as e:
             errors = e.error_dict
             error_summary = e.error_summary
             if is_an_update:
@@ -185,8 +182,8 @@ class MultilangPackageController(PackageController):
             data_dict['state'] = 'none'
             return self.new(data_dict, errors, error_summary)
 
-    def _save_edit(self, name_or_id, context, package_type=None):        
-        from ckan.lib.search import SearchIndexError
+    def _save_edit(self, name_or_id, context, package_type=None):
+        from ckan.lib.search.common import SearchIndexError
         log.debug('Package save request name: %s POST: %r',
                   name_or_id, request.POST)
         try:
@@ -211,7 +208,7 @@ class MultilangPackageController(PackageController):
                 del data_dict['extra_tag']
 
             pkg = get_action('package_update')(context, data_dict)
-            
+
             c.pkg = context['package']
             c.pkg_dict = pkg
 
@@ -222,17 +219,17 @@ class MultilangPackageController(PackageController):
 
             #  MULTILANG - persisting package dict
             log.info(':::::::::::: Saving the corresponding localized title and abstract :::::::::::::::')
-            
+
             # q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == c.pkg_dict.get('id'), PackageMultilang.lang == lang).all()
-            q_results = PackageMultilang.get_for_package_id_and_lang(c.pkg_dict.get('id'), lang) 
-            
+            q_results = PackageMultilang.get_for_package_id_and_lang(c.pkg_dict.get('id'), lang)
+
             if q_results:
                 pkg_processed_field = []
                 for result in q_results:
                     # do not update multilang field if original pkg dict doesn't
                     # have this field anymore. otherwise IntegrityError will raise
                     # because text will be None
-                    if c.pkg_dict.has_key(result.field):
+                    if result.field in c.pkg_dict:
                         pkg_processed_field.append(result.field)
                         log.debug('::::::::::::::: value before %r', result.text)
                         result.text = c.pkg_dict.get(result.field)
@@ -253,17 +250,17 @@ class MultilangPackageController(PackageController):
             self._form_save_redirect(pkg['name'], 'edit', package_type=package_type)
         except NotAuthorized:
             abort(401, _('Unauthorized to read package %s') % id)
-        except NotFound, e:
+        except NotFound as e:
             abort(404, _('Dataset not found'))
         except dict_fns.DataError:
-            abort(400, _(u'Integrity Error'))
-        except SearchIndexError, e:
+            abort(400, _('Integrity Error'))
+        except SearchIndexError as e:
             try:
-                exc_str = unicode(repr(e.args))
+                exc_str = repr(e.args)
             except Exception:  # We don't like bare excepts
-                exc_str = unicode(str(e))
-            abort(500, _(u'Unable to update search index.') + exc_str)
-        except ValidationError, e:
+                exc_str = str(e)
+            abort(500, _('Unable to update search index.') + exc_str)
+        except ValidationError as e:
             errors = e.error_dict
             error_summary = e.error_summary
             return self.edit(name_or_id, data_dict, errors, error_summary)
