@@ -328,22 +328,26 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
     def import_stage(self, harvest_object):
         import_stage = super(MultilangHarvester, self).import_stage(harvest_object)
 
-        if import_stage == True:
+        if import_stage:
             # Get the existing HarvestObject
             existing_object = model.Session.query(HarvestObject) \
                     .filter(HarvestObject.guid==harvest_object.guid) \
                     .filter(HarvestObject.current==True) \
                     .first()
 
-            session = Session
-            
-            harvested_package = session.query(Package).filter(Package.id == existing_object.package_id).first()
-            
-            if harvested_package:
-                package_dict = model_dictize.package_dictize(harvested_package, {'model': model, 'session': session})
-                if package_dict:
-                    self.after_import_stage(package_dict)
-        
+            if existing_object:
+                session = Session
+                harvested_package = session.query(Package) \
+                    .filter(Package.id == existing_object.package_id) \
+                    .first()
+
+                if harvested_package:
+                    package_dict = model_dictize.package_dictize(harvested_package, {'model': model, 'session': session})
+                    if package_dict:
+                        self.after_import_stage(package_dict)
+            else:
+                log.info('Skipping import of harvest object not found %s', harvest_object.guid)
+
         return import_stage
 
     def after_import_stage(self, package_dict):        
