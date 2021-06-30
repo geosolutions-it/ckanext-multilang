@@ -314,24 +314,24 @@ class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetFo
 
     def show_package_schema(self):
         schema = super(MultilangResourcesPlugin, self).show_package_schema()
-        return MultilangResourcesAux.update_schema(schema)
+        return MultilangResourcesAux().update_schema(schema)
 
     def create_package_schema(self):
         schema = super(MultilangResourcesPlugin, self).create_package_schema()
-        return MultilangResourcesAux.update_schema(schema)
+        return MultilangResourcesAux().update_schema(schema)
 
     def update_package_schema(self):
         schema = super(MultilangResourcesPlugin, self).update_package_schema()
-        return MultilangResourcesAux.update_schema(schema)
+        return MultilangResourcesAux().update_schema(schema)
 
     def read_template(self):
-        return MultilangResourcesAux.read_template()
+        return MultilangResourcesAux().read_template()
 
     def resource_form(self):
-        return MultilangResourcesAux.resource_form()
+        return MultilangResourcesAux().resource_form()
 
     def get_helpers(self):
-        return MultilangResourcesAux.get_helpers()
+        return MultilangResourcesAux().get_helpers()
 
 
 class MultilangResourcesAux():
