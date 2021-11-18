@@ -85,13 +85,14 @@ setup(
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
-    entry_points='''
-        [ckan.plugins]
-            multilang=ckanext.multilang.plugin:MultilangPlugin
-            multilang_harvester=ckanext.multilang.harvesters.multilang:MultilangHarvester
-            multilang_resources=ckanext.multilang.plugin:MultilangResourcesPlugin
-
-        [paste.paster_command]
-            multilangdb=ckanext.multilang.commands.multilang:Multilang
-    '''
+    entry_points = {
+        'ckan.plugins': [
+            'multilang = ckanext.multilang.plugin:MultilangPlugin',
+            'multilang_harvester = ckanext.multilang.harvesters.multilang:MultilangHarvester',
+            'multilang_resources = ckanext.multilang.plugin:MultilangResourcesPlugin',
+        ],
+        'ckan.click_command': [
+            'multilang = ckanext.multilang.commands.cli:multilang',
+        ],
+    }
 )
