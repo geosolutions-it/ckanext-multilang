@@ -9,11 +9,15 @@ from ckanext.multilang.model import (
     TagMultilang,
 )
 
-log = logging.getLogger(__file__)
+log = logging.getLogger(__name__)
 
 
 def getLanguage():
-    lang = get_lang()
+    try:
+        lang = get_lang()
+    except Exception as e:
+        log.warning(f'Exception while retrieving lang')
+        lang = config.get(u'ckan.locale_default', u'en')
 
     if lang is not None:
         if isinstance(lang, list):
