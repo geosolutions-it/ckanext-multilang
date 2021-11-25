@@ -83,6 +83,9 @@ class MultilangPackageController(PackageController):
                         TagMultilang.persist({'id': tag_id, 'name': tag.get('key'), 'text': tag.get('value')}, lang)
 
     def _save_new(self, context, package_type=None):
+        # This method overrides ckan's default one, fiddling internal fields to properly handle localizations.
+        # Code is aligned to CKAN 2.9.
+
         # The staged add dataset used the new functionality when the dataset is
         # partially created so we need to know if we actually are updating or
         # this is a real new.
@@ -119,9 +122,10 @@ class MultilangPackageController(PackageController):
                         url = h.url_for(controller='package',
                                         action='new_resource',
                                         id=pkg_dict['name'])
-                    redirect(url)
+                    h.redirect_to(url)
                 # Make sure we don't index this dataset
-                if request.params['save'] not in ['go-resource', 'go-metadata']:
+                if request.params['save'] not in ['go-resource',
+                                                  'go-metadata']:
                     data_dict['state'] = 'draft'
                 # allow the state to be changed
                 context['allow_state_change'] = True
@@ -154,21 +158,22 @@ class MultilangPackageController(PackageController):
                 url = h.url_for(controller='package',
                                 action='new_resource',
                                 id=pkg_dict['name'])
-                redirect(url)
+                h.redirect_to(url)
 
-            self._form_save_redirect(pkg_dict['name'], 'new', package_type=package_type)
+            self._form_save_redirect(pkg_dict['name'], 'new',
+                                     package_type=package_type)
         except NotAuthorized:
-            abort(401, _('Unauthorized to read package %s') % '')
+            abort(403, _('Unauthorized to read package %s') % '')
         except NotFound as e:
             abort(404, _('Dataset not found'))
         except dict_fns.DataError:
-            abort(400, _('Integrity Error'))
+            abort(400, _(u'Integrity Error'))
         except SearchIndexError as e:
             try:
-                exc_str = repr(e.args)
+                exc_str = text_type(repr(e.args))
             except Exception:  # We don't like bare excepts
-                exc_str = str(e)
-            abort(500, _('Unable to add package to search index.') + exc_str)
+                exc_str = text_type(str(e))
+            abort(500, _(u'Unable to add package to search index.') + exc_str)
         except ValidationError as e:
             errors = e.error_dict
             error_summary = e.error_summary
@@ -183,7 +188,10 @@ class MultilangPackageController(PackageController):
             return self.new(data_dict, errors, error_summary)
 
     def _save_edit(self, name_or_id, context, package_type=None):
-        from ckan.lib.search.common import SearchIndexError
+        # This method overrides ckan's default one, fiddling internal fields to properly handle localizations.
+        # Code is aligned to CKAN 2.9.
+
+        from ckan.lib.search import SearchIndexError
         log.debug('Package save request name: %s POST: %r',
                   name_or_id, request.POST)
         try:
@@ -208,7 +216,6 @@ class MultilangPackageController(PackageController):
                 del data_dict['extra_tag']
 
             pkg = get_action('package_update')(context, data_dict)
-
             c.pkg = context['package']
             c.pkg_dict = pkg
 
@@ -247,19 +254,20 @@ class MultilangPackageController(PackageController):
                     if c.pkg_dict.get(field):
                         PackageMultilang.persist({'id': c.pkg_dict.get('id'), 'field': field, 'text': c.pkg_dict.get(field)}, lang)
 
-            self._form_save_redirect(pkg['name'], 'edit', package_type=package_type)
+            self._form_save_redirect(pkg['name'], 'edit',
+                                     package_type=package_type)
         except NotAuthorized:
-            abort(401, _('Unauthorized to read package %s') % id)
+            abort(403, _('Unauthorized to read package %s') % id)
         except NotFound as e:
             abort(404, _('Dataset not found'))
         except dict_fns.DataError:
-            abort(400, _('Integrity Error'))
+            abort(400, _(u'Integrity Error'))
         except SearchIndexError as e:
             try:
-                exc_str = repr(e.args)
+                exc_str = text_type(repr(e.args))
             except Exception:  # We don't like bare excepts
-                exc_str = str(e)
-            abort(500, _('Unable to update search index.') + exc_str)
+                exc_str = text_type(str(e))
+            abort(500, _(u'Unable to update search index.') + exc_str)
         except ValidationError as e:
             errors = e.error_dict
             error_summary = e.error_summary
