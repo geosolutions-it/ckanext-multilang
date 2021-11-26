@@ -29,8 +29,10 @@ def is_tag_loc_enabled():
     return eval(config.get('multilang.enable_tag_localization', 'False'))
 
 
-def get_localized_pkg(pkg_dict):
-    if pkg_dict != '' and 'type' in pkg_dict:
+def get_localized_pkg(pkg_dict, logname=''):
+    log.debug(f'PKG {logname}--> {pkg_dict}')
+
+    if pkg_dict and 'type' in pkg_dict:
         #  MULTILANG - Localizing package dict
         lang = getLanguage()
 
