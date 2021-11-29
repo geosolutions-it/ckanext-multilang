@@ -146,6 +146,14 @@ def before_view_dataset(odict, lang):
     return odict
 
 
+def delete_dataset(entity):
+    multi_lang_packages = PackageMultilang.get_for_package(entity.id)
+    for multi_lang_package in multi_lang_packages:
+        multi_lang_package.delete()
+        log.info(f'--> delete MultiLangPackage {multi_lang_package.package_id}')
+           
+
+
 def _localized_tags_persist(self, extra_tag, pkg_dict, lang):
     if extra_tag:
         for tag in extra_tag:

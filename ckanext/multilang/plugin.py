@@ -23,6 +23,7 @@ from ckanext.multilang.logic.package import (
     after_create_dataset,
     after_update_dataset,
     before_view_dataset,
+    delete_dataset
 )
 
 from ckanext.multilang.logic.resource import (
@@ -200,13 +201,17 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
                 create_new = True
 
             if create_new:
-                log.info(':::::::::::: Localized fields are missing in package_multilang table, persisting defaults using values in the table group :::::::::::::::')
+                log.info(
+                    ':::::::::::: Localized fields are missing in package_multilang table, persisting defaults using values in the table group :::::::::::::::')
                 GroupMultilang.persist(group, lang)
 
     ## ##############
     # DELETE
     ## ##############
     def delete(self, model_obj):
+        log.info(f'delete --> {model_obj}: {isinstance(model_obj, model.Package)}')
+        if isinstance(model_obj, model.Package):
+            delete_dataset(model_obj)
         return model_obj
 
     def before_show(self, resource_dict):
@@ -233,7 +238,6 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
             elif otype == 'dataset':
                 after_update_dataset(context, obj_dict, lang)
 
-
     def after_create(self, context, data):
         otype = data.get('type')
         lang = helpers.getLanguage()
@@ -247,7 +251,6 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
 
 
 class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
-
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.ITemplateHelpers)
 
