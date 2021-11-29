@@ -81,7 +81,8 @@ def after_update_dataset(context, pkg_dict, lang):
                                               'text': field_data},
                                              lang)
     else:
-        log.info(':::::::::::: Localised fields are missing in package_multilang table, persisting defaults using values in the table package :::::::::::::::')
+        log.info(
+            ':::::::::::: Localised fields are missing in package_multilang table, persisting defaults using values in the table package :::::::::::::::')
         for field_name in PKG_LOCALIZED_FIELDS:
             log.debug(f'Storing localized field {field_name}::{lang}')
             field_data = pkg_dict.get(field_name)
@@ -146,12 +147,32 @@ def before_view_dataset(odict, lang):
     return odict
 
 
-def delete_dataset(entity):
+def delete_multilang_dataset(entity):
     multi_lang_packages = PackageMultilang.get_for_package(entity.id)
     for multi_lang_package in multi_lang_packages:
         multi_lang_package.delete()
         log.info(f'--> delete MultiLangPackage {multi_lang_package.package_id}')
-           
+
+
+def delete_multilang_group(entity):
+    groups = GroupMultilang.get_for_group_id(entity.id)
+    for group in groups:
+        group.delete()
+        log.info(f'--> delete GroupMultilang: {group.name}')
+
+
+def delete_multilang_resource(entity):
+    resources = ResourceMultilang.get_for_resource_id(entity.id)
+    for resource in resources:
+        resource.delete()
+        log.info(f'--> delete ResourceMultilang: {resource.field}: lang -> {resource.lang}, text -> {resource.text}')
+
+
+def delete_multilang_tag(entity):
+    tags = TagMultilang.get_all(entity.name)
+    for tag in tags:
+        tag.delete()
+        log.info(f'--> delete TagMultilang: {tag.id}: lang -> {resource.lang}, name -> {tag.name}, text -> {tag.text}')
 
 
 def _localized_tags_persist(self, extra_tag, pkg_dict, lang):

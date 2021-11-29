@@ -23,7 +23,10 @@ from ckanext.multilang.logic.package import (
     after_create_dataset,
     after_update_dataset,
     before_view_dataset,
-    delete_dataset
+    delete_multilang_dataset,
+    delete_multilang_group,
+    delete_multilang_resource,
+    delete_multilang_tag
 )
 
 from ckanext.multilang.logic.resource import (
@@ -211,7 +214,13 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
     def delete(self, model_obj):
         log.info(f'delete --> {model_obj}: {isinstance(model_obj, model.Package)}')
         if isinstance(model_obj, model.Package):
-            delete_dataset(model_obj)
+            delete_multilang_dataset(model_obj)
+        elif isinstance(model_obj, model.Group):
+            delete_multilang_group(model_obj)
+        elif isinstance(model_obj, model.Resource):
+            delete_multilang_resource(model_obj)
+        elif isinstance(model_obj, model.Tag):
+            delete_multilang_tag(model_obj)
         return model_obj
 
     def before_show(self, resource_dict):
@@ -248,6 +257,21 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
                 after_create_resource(context, data, lang)
             elif otype == 'dataset':
                 after_create_dataset(context, data, lang)
+
+    ## ##############
+    # DELETE
+    ## ##############
+    def delete(self, model_obj):
+        log.info(f'delete --> {model_obj}: {isinstance(model_obj, model.Package)}')
+        if isinstance(model_obj, model.Package):
+            delete_multilang_dataset(model_obj)
+        elif isinstance(model_obj, model.Group):
+            delete_multilang_group(model_obj)
+        elif isinstance(model_obj, model.Resource):
+            delete_multilang_resource(model_obj)
+        elif isinstance(model_obj, model.Tag):
+            delete_multilang_tag(model_obj)
+        return model_obj
 
 
 class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
