@@ -222,16 +222,17 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
 
         return resource_dict
 
-    def after_update(self, context, data):
-        otype = data.get('type')
+    def after_update(self, context, obj_dict):
+        otype = obj_dict.get('type')
         lang = helpers.getLanguage()
         log.debug(f'Dispatching after_update for TYPE:{otype} LANG:{lang}')
 
         if lang:
             if otype == 'resource':
-                after_update_resource(context, data, lang)
+                after_update_resource(context, obj_dict, lang)
             elif otype == 'dataset':
-                after_update_dataset(context, data, lang)
+                after_update_dataset(context, obj_dict, lang)
+
 
     def after_create(self, context, data):
         otype = data.get('type')
