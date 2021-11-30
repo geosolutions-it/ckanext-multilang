@@ -212,7 +212,7 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
     # DELETE
     ## ##############
     def delete(self, model_obj):
-        log.info(f'delete --> {model_obj}: {isinstance(model_obj, model.Package)}')
+        log.debug(f'delete --> {model_obj}: {isinstance(model_obj, model.Package)}')
         if isinstance(model_obj, model.Package):
             delete_multilang_dataset(model_obj)
         elif isinstance(model_obj, model.Group):
@@ -262,7 +262,7 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
     # DELETE
     ## ##############
     def delete(self, model_obj):
-        log.info(f'delete --> {model_obj}: {isinstance(model_obj, model.Package)}')
+        log.debug(f'delete --> {model_obj}: {isinstance(model_obj, model.Package)}')
         if isinstance(model_obj, model.Package):
             delete_multilang_dataset(model_obj)
         elif isinstance(model_obj, model.Group):
