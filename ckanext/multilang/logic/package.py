@@ -154,27 +154,6 @@ def delete_multilang_dataset(entity):
         log.debug(f'--> delete MultiLangPackage {multi_lang_package.package_id}')
 
 
-def delete_multilang_group(entity):
-    groups = GroupMultilang.get_for_group_id(entity.id)
-    for group in groups:
-        group.delete()
-        log.debug(f'--> delete GroupMultilang: {group.name}')
-
-
-def delete_multilang_resource(entity):
-    resources = ResourceMultilang.get_for_resource_id(entity.id)
-    for resource in resources:
-        resource.delete()
-        log.debug(f'--> delete ResourceMultilang: {resource.field}: lang -> {resource.lang}, text -> {resource.text}')
-
-
-def delete_multilang_tag(entity):
-    tags = TagMultilang.get_all(entity.name)
-    for tag in tags:
-        tag.delete()
-        log.debug(f'--> delete TagMultilang: {tag.id}: lang -> {resource.lang}, name -> {tag.name}, text -> {tag.text}')
-
-
 def _localized_tags_persist(self, extra_tag, pkg_dict, lang):
     if extra_tag:
         for tag in extra_tag:
