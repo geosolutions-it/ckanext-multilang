@@ -32,3 +32,10 @@ def after_update_resource(context, resource, lang):
             ResourceMultilang.persist(r, lang)
 
 # def before_view_resource(data):
+
+
+def delete_multilang_resource(entity):
+    resources = ResourceMultilang.get_for_resource_id(entity.id)
+    for resource in resources:
+        resource.delete()
+        log.debug(f'--> delete ResourceMultilang: {resource.field}: lang -> {resource.lang}, text -> {resource.text}')

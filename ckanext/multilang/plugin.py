@@ -23,15 +23,14 @@ from ckanext.multilang.logic.package import (
     after_create_dataset,
     after_update_dataset,
     before_view_dataset,
-    delete_multilang_dataset,
-    delete_multilang_tag
+    delete_multilang_dataset
 )
 
 from ckanext.multilang.logic.resource import (
     after_create_resource,
     after_update_resource,
-    # before_view_resource,
     delete_multilang_resource,
+    # before_view_resource,
 )
 
 from ckanext.multilang.logic.group import delete_multilang_group
