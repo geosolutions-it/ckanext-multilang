@@ -2,7 +2,7 @@
 
 {% import 'macros/form_macros.html' as form_macros %}
 
-{% block package_basic_fields_tags %} 
+{% block package_basic_fields_tags %}
   {{ super() }}
 
 {% if h.is_tag_loc_enabled() %}
@@ -68,7 +68,7 @@
           {% for organization in organizations_available %}
             {# get out first org from users list only if there is not an existing org #}
             {% set selected_org = (existing_org and existing_org == organization.id) or (not existing_org and not data.id and organization.id == organizations_available[0].id) %}
-            
+
             <!-- Multilang extension set the localized org name using helper function -->
             {% set localized_org = h.get_localized_group(organization) %}
             <option value="{{ organization.id }}" {% if selected_org %} selected="selected" {% endif %}>{{ (localized_org.display_name) or (organization.display_name) }}</option>

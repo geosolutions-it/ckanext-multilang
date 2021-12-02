@@ -1,25 +1,18 @@
-
-import sys
 import logging
 
-from sqlalchemy import types, Column, Table, ForeignKey
-from sqlalchemy import orm
+from sqlalchemy import Column, ForeignKey, Table, types
 
-from ckan.lib.base import config
-from ckan import model
-from ckan.model import Session
-from ckan.model import meta
+from ckan.model import Session, meta
 from ckan.model.domain_object import DomainObject
-
-from ckan import model
-
-log = logging.getLogger(__name__)
 
 __all__ = ['PackageMultilang', 'package_multilang_table', 'GroupMultilang', 'ResourceMultilang', 'group_multilang_table', 'TagMultilang', 'tag_multilang_table', 'setup']
 
+log = logging.getLogger(__name__)
+
+
 package_multilang_table = Table('package_multilang', meta.metadata,
     Column('id', types.Integer, primary_key=True),
-    Column('package_id', types.UnicodeText, ForeignKey("package.id", ondelete="CASCADE"), nullable=False),
+    Column('package_id', types.UnicodeText, ForeignKey('package.id', ondelete='CASCADE'), nullable=False),
     Column('field', types.UnicodeText, nullable=False, index=True),
     Column('field_type', types.UnicodeText, nullable=False, index=True),
     Column('lang', types.UnicodeText, nullable=False, index=True),
@@ -27,7 +20,7 @@ package_multilang_table = Table('package_multilang', meta.metadata,
 
 group_multilang_table = Table('group_multilang', meta.metadata,
     Column('id', types.Integer, primary_key=True),
-    Column('group_id', types.UnicodeText, ForeignKey("group.id", ondelete="CASCADE"), nullable=False),
+    Column('group_id', types.UnicodeText, ForeignKey('group.id', ondelete='CASCADE'), nullable=False),
     Column('name', types.UnicodeText, nullable=False, index=True),
     Column('field', types.UnicodeText, nullable=False, index=True),
     Column('lang', types.UnicodeText, nullable=False, index=True),
@@ -35,26 +28,27 @@ group_multilang_table = Table('group_multilang', meta.metadata,
 
 resource_multilang_table = Table('resource_multilang', meta.metadata,
     Column('id', types.Integer, primary_key=True),
-    Column('resource_id', types.UnicodeText, ForeignKey("resource.id", ondelete="CASCADE"), nullable=False),
+    Column('resource_id', types.UnicodeText, ForeignKey('resource.id', ondelete='CASCADE'), nullable=False),
     Column('field', types.UnicodeText, nullable=False, index=True),
     Column('lang', types.UnicodeText, nullable=False, index=True),
     Column('text', types.UnicodeText, nullable=False, index=True))
 
 tag_multilang_table = Table('tag_multilang', meta.metadata,
     Column('id', types.Integer, primary_key=True),
-    Column('tag_id', types.UnicodeText, ForeignKey("tag.id", ondelete="CASCADE"), nullable=False),
+    Column('tag_id', types.UnicodeText, ForeignKey('tag.id', ondelete='CASCADE'), nullable=False),
     Column('tag_name', types.UnicodeText, nullable=False, index=True),
     Column('lang', types.UnicodeText, nullable=False, index=True),
     Column('text', types.UnicodeText, nullable=False, index=True))
 
+
 def setup():
     log.debug('Multilingual tables defined in memory')
 
-    #Setting up package multilang table
+    # Setting up package multilang table
     if not package_multilang_table.exists():
         try:
             package_multilang_table.create()
-        except Exception,e:
+        except Exception as e:
             # Make sure the table does not remain incorrectly created
             if package_multilang_table.exists():
                 Session.execute('DROP TABLE package_multilang')
@@ -65,28 +59,27 @@ def setup():
         log.info('Package Multilingual table created')
     else:
         log.info('Package Multilingual table already exist')
-    
-    #Setting up group multilang table
+
+    # Setting up group multilang table
     if not group_multilang_table.exists():
         try:
             group_multilang_table.create()
-        except Exception,e:
+        except Exception as e:
             # Make sure the table does not remain incorrectly created
             if group_multilang_table.exists():
                 Session.execute('DROP TABLE group_multilang')
                 Session.commit()
-
             raise e
 
         log.info('Group Multilingual table created')
     else:
         log.info('Group Multilingual table already exist')
 
-    #Setting up resource multilang table
+    # Setting up resource multilang table
     if not resource_multilang_table.exists():
         try:
             resource_multilang_table.create()
-        except Exception,e:
+        except Exception as e:
             # Make sure the table does not remain incorrectly created
             if resource_multilang_table.exists():
                 Session.execute('DROP TABLE resource_multilang')
@@ -98,11 +91,11 @@ def setup():
     else:
         log.info('Resource Multilingual table already exist')
 
-    #Setting up tag multilang table
+    # Setting up tag multilang table
     if not tag_multilang_table.exists():
         try:
             tag_multilang_table.create()
-        except Exception,e:
+        except Exception as e:
             # Make sure the table does not remain incorrectly created
             if tag_multilang_table.exists():
                 Session.execute('DROP TABLE tag_multilang')
@@ -113,6 +106,7 @@ def setup():
         log.info('Tag Multilingual table created')
     else:
         log.info('Tag Multilingual table already exist')
+
 
 class PackageMultilang(DomainObject):
     def __init__(self, package_id=None, field=None, field_type=None, lang=None, text=None):
@@ -131,7 +125,7 @@ class PackageMultilang(DomainObject):
     @classmethod
     def get_for_package(self, package_id):
         obj = meta.Session.query(self).autoflush(False)
-        records = obj.filter(self.package_id == package_id).all()  
+        records = obj.filter(self.package_id == package_id).all()
         return records
 
     @classmethod
@@ -149,15 +143,17 @@ class PackageMultilang(DomainObject):
             ])
 
             session.commit()
-        except Exception, e:
+        except Exception as e:
             # on rollback, the same closure of state
             # as that of commit proceeds.
             session.rollback()
 
-            log.error('Exception occurred while persisting DB objects: %s', e)
+            log.error('Exception occurred while persisting DB objects:', exc_info=e)
             raise
 
+
 meta.mapper(PackageMultilang, package_multilang_table)
+
 
 class GroupMultilang(DomainObject):
     def __init__(self, group_id=None, name=None, field=None, lang=None, text=None):
@@ -182,13 +178,13 @@ class GroupMultilang(DomainObject):
     @classmethod
     def get_for_group_name(self, group_name):
         obj = meta.Session.query(self).autoflush(False)
-        records = obj.filter_by(name=group_name)    
+        records = obj.filter_by(name=group_name)
         return records
 
     @classmethod
     def get_for_group_name_and_lang(self, group_name, group_lang):
         obj = meta.Session.query(self).autoflush(False)
-        records = obj.filter_by(name=group_name, lang=group_lang)    
+        records = obj.filter_by(name=group_name, lang=group_lang)
         return records
 
     @classmethod
@@ -201,15 +197,17 @@ class GroupMultilang(DomainObject):
             ])
 
             session.commit()
-        except Exception, e:
+        except Exception as e:
             # on rollback, the same closure of state
-            # as that of commit proceeds. 
+            # as that of commit proceeds.
             session.rollback()
 
-            log.error('Exception occurred while persisting DB objects: %s', e)
+            log.error('Exception occurred while persisting DB objects:', exc_info=e)
             raise
 
+
 meta.mapper(GroupMultilang, group_multilang_table)
+
 
 class ResourceMultilang(DomainObject):
     def __init__(self, resource_id=None, field=None, lang=None, text=None):
@@ -217,7 +215,7 @@ class ResourceMultilang(DomainObject):
         self.field = field
         self.lang = lang
         self.text = text
-    
+
     @classmethod
     def get_for_pk(self, resource_id, field, lang):
         obj = meta.Session.query(self).autoflush(False)
@@ -252,12 +250,12 @@ class ResourceMultilang(DomainObject):
             ])
 
             session.commit()
-        except Exception, e:
+        except Exception as e:
             # on rollback, the same closure of state
-            # as that of commit proceeds. 
+            # as that of commit proceeds.
             session.rollback()
 
-            log.error('Exception occurred while persisting DB objects: %s', e)
+            log.error('Exception occurred while persisting DB objects:', exc_info=e)
             raise
 
     @classmethod
@@ -266,15 +264,17 @@ class ResourceMultilang(DomainObject):
         try:
             session.add_all(resources_list)
             session.commit()
-        except Exception, e:
+        except Exception as e:
             # on rollback, the same closure of state
             # as that of commit proceeds.
             session.rollback()
 
-            log.error('Exception occurred while persisting DB objects: %s', e)
+            log.error('Exception occurred while persisting DB objects:', exc_info=e)
             raise
 
+
 meta.mapper(ResourceMultilang, resource_multilang_table)
+
 
 class TagMultilang(DomainObject):
     def __init__(self, tag_id=None, tag_name=None, lang=None, text=None):
@@ -292,14 +292,14 @@ class TagMultilang(DomainObject):
 
     @classmethod
     def by_name(self, tag_name, tag_lang, autoflush=True):
-        query = meta.Session.query(TagMultilang).filter(TagMultilang.tag_name==tag_name, TagMultilang.lang==tag_lang)
+        query = meta.Session.query(TagMultilang).filter(TagMultilang.tag_name == tag_name, TagMultilang.lang == tag_lang)
         query = query.autoflush(autoflush)
         tag = query.first()
         return tag
 
     @classmethod
     def all_by_name(self, tag_name, autoflush=True):
-        query = meta.Session.query(TagMultilang).filter(TagMultilang.tag_name==tag_name)
+        query = meta.Session.query(TagMultilang).filter(TagMultilang.tag_name == tag_name)
         query = query.autoflush(autoflush)
         tags = query.all()
 
@@ -311,7 +311,7 @@ class TagMultilang(DomainObject):
 
     @classmethod
     def by_tag_id(self, tag_id, tag_lang, autoflush=True):
-        query = meta.Session.query(TagMultilang).filter(TagMultilang.tag_id==tag_id, TagMultilang.lang==tag_lang)
+        query = meta.Session.query(TagMultilang).filter(TagMultilang.tag_id == tag_id, TagMultilang.lang == tag_lang)
         query = query.autoflush(autoflush)
         tag = query.first()
         return tag
@@ -325,12 +325,12 @@ class TagMultilang(DomainObject):
             )
 
             session.commit()
-        except Exception, e:
+        except Exception as e:
             # on rollback, the same closure of state
-            # as that of commit proceeds. 
+            # as that of commit proceeds.
             session.rollback()
 
-            log.error('Exception occurred while persisting DB objects: %s', e)
+            log.error('Exception occurred while persisting DB objects:', exc_info=e)
             raise
 
     @classmethod
@@ -339,17 +339,20 @@ class TagMultilang(DomainObject):
         try:
             session.add_all([
                 TagMultilang(
-                    tag_id=tag.get(u'id'), tag_name=tag.get(u'name'), lang=tag.get(u'lang'), text=tag.get(u'text'))
+                    tag_id=tag.get('id'),
+                    tag_name=tag.get('name'),
+                    lang=tag.get('lang'),
+                    text=tag.get('text'))
                 for tag in tags
             ])
 
             session.commit()
-        except Exception, e:
+        except Exception as e:
             # on rollback, the same closure of state
             # as that of commit proceeds.
             session.rollback()
 
-            log.error('Exception occurred while persisting DB objects: %s', e)
+            log.error('Exception occurred while persisting DB objects:', exc_info=e)
             raise
 
 

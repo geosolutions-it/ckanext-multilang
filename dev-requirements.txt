@@ -1,0 +1,9 @@
+# -r pip-requirements.txt
+
+ckantoolkit
+pika==1.2.0
+babel==2.9.1
+pytest-ckan
+pytest-cov
+mock
+crudini==0.9.3

@@ -1,16 +1,14 @@
 import logging
-import ckan.logic as logic
-import ckan.logic.action.get as get
-import sqlalchemy
-import ckan.plugins.toolkit as toolkit
 
-from paste.deploy.converters import asbool
-from pylons.i18n import get_lang
-from ckanext.multilang.model import GroupMultilang
+import sqlalchemy
+from ckan.common import _, g, request, config, asbool
 
 import ckan.lib as lib
-
+import ckan.logic as logic
+import ckan.logic.action.get as get
+import ckan.plugins.toolkit as toolkit
 import ckanext.multilang.helpers as helpers
+from ckanext.multilang.model import GroupMultilang
 
 _check_access = logic.check_access
 _unpick_search = get._unpick_search
@@ -20,6 +18,7 @@ _validate = lib.navl.dictization_functions.validate
 ValidationError = logic.ValidationError
 
 log = logging.getLogger(__file__)
+
 
 @toolkit.side_effect_free
 def group_list(context, data_dict):
@@ -57,6 +56,7 @@ def group_list(context, data_dict):
     '''
     _check_access('group_list', context, data_dict)
     return _group_or_org_list(context, data_dict)
+
 
 @toolkit.side_effect_free
 def organization_list(context, data_dict):
@@ -98,6 +98,7 @@ def organization_list(context, data_dict):
     data_dict['type'] = 'organization'
     return _group_or_org_list(context, data_dict, is_org=True)
 
+
 def _group_or_org_list(context, data_dict, is_org=False):
     model = context['model']
     api = context.get('api_version')
@@ -125,7 +126,7 @@ def _group_or_org_list(context, data_dict, is_org=False):
     # if it is supplied and sort isn't use order_by and raise a warning
     order_by = data_dict.get('order_by', '')
     if order_by:
-        log.warn('`order_by` deprecated please use `sort`')
+        log.warning('`order_by` deprecated please use `sort`')
         if not data_dict.get('sort'):
             sort = order_by
 
@@ -141,10 +142,10 @@ def _group_or_org_list(context, data_dict, is_org=False):
 
     all_fields = data_dict.get('all_fields', None)
     include_extras = all_fields and \
-                     asbool(data_dict.get('include_extras', False))
+        asbool(data_dict.get('include_extras', False))
 
     query = model.Session.query(model.Group)
-    
+
     if include_extras:
         # this does an eager load of the extras, avoiding an sql query every
         # time group_list_dictize accesses a group's extra.
@@ -154,9 +155,9 @@ def _group_or_org_list(context, data_dict, is_org=False):
     if groups:
         query = query.filter(model.Group.name.in_(groups))
     if q:
-        q = u'%{0}%'.format(q)
-        
-        ## MULTILANG FRAGMENT
+        q = f'%{q}%'
+
+        # MULTILANG FRAGMENT
         lang = helpers.getLanguage()
         groups_multilang_id_list = []
 
@@ -167,13 +168,13 @@ def _group_or_org_list(context, data_dict, is_org=False):
 
         if q_results:
             for result in q_results:
-                log.info(":::::::::::::: Group ID Found:::: %r", result.group_id)
+                log.info(':::::::::::::: Group ID Found:::: %r', result.group_id)
                 groups_multilang_id_list.append(result.group_id)
-                
+
             groups_multilang_id_list = set(groups_multilang_id_list)
 
         if len(groups_multilang_id_list) > 0:
-            #query = query.filter(model.Group.id.in_(groups_multilang_id_list))
+            # query = query.filter(model.Group.id.in_(groups_multilang_id_list))
             query = query.filter(_or_(
                 model.Group.name.ilike(q),
                 model.Group.title.ilike(q),
@@ -186,7 +187,7 @@ def _group_or_org_list(context, data_dict, is_org=False):
                 model.Group.title.ilike(q),
                 model.Group.description.ilike(q)
             ))
-        ## END OF MULTILANG FRAGMENT
+        # END OF MULTILANG FRAGMENT
 
     query = query.filter(model.Group.is_organization == is_org)
     if not is_org:

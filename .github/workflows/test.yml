@@ -1,0 +1,79 @@
+name: Tests
+on: [push, pull_request]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: pip install flake8 pytest
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+  test:
+    needs: lint
+    strategy:
+      matrix:
+        ckan-version: [2.9]
+      fail-fast: false
+
+    name: CKAN ${{ matrix.ckan-version }}
+    runs-on: ubuntu-latest
+    container:
+      image: openknowledge/ckan-dev:${{ matrix.ckan-version }}
+    services:
+      solr:
+        image: ckan/ckan-solr-dev:${{ matrix.ckan-version }}
+      postgres:
+        image: ckan/ckan-postgres-dev:${{ matrix.ckan-version }}
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+          image: redis:3
+    env:
+      CKAN_SQLALCHEMY_URL: postgresql://ckan_default:pass@postgres/ckan_test
+      CKAN_DATASTORE_WRITE_URL: postgresql://datastore_write:pass@postgres/datastore_test
+      CKAN_DATASTORE_READ_URL: postgresql://datastore_read:pass@postgres/datastore_test
+      CKAN_SOLR_URL: http://solr:8983/solr/ckan
+      CKAN_REDIS_URL: redis://redis:6379/1
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install requirements
+      run: |
+        pip install -r dev-requirements.txt
+         pip install -e .
+        # Replace default path to CKAN core config file with the one on the container
+        sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' test.ini
+    - name: Install extention[ckan/ckanext-harvest]
+      run: |
+        # Install ckanext-harvest
+        # pip install https://github.com/geosolutions-it/ckanext-harvest/archive/master.zip
+
+         git clone --branch=master https://github.com/ckan/ckanext-harvest
+         cd ckanext-harvest
+         # pip install -r ckanext-harvest/dev-requirements.txt
+         pip install -e .
+
+    - name: Setup extension
+      run: |
+        crudini --set --verbose --list --list-sep=\  test.ini app:main ckan.plugins harvest ckan_harvester
+        ckan -c test.ini db init
+        ckan -c test.ini harvester initdb
+    - name: Run tests
+      run: pytest --ckan-ini=test.ini --cov=ckanext.multilang --cov-report=xml --cov-append --disable-warnings ckanext/multilang/tests
+
+#    - name: Upload coverage report to codecov
+#      uses: codecov/codecov-action@v1
+#      with:
+#        file: ./coverage.xml

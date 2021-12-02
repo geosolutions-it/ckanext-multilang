@@ -2,5 +2,5 @@
 
 {% block basic_fields %}
     {{ super() }}
-    {% snippet 'package/snippets/resource_additional_fields.html', data=c.resource, errors=errors %}
+    {% snippet 'package/snippets/resource_additional_fields.html', data=data, errors=errors %}
 {% endblock %}

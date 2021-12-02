@@ -1,28 +1,27 @@
 import logging
-import operator
 
-import ckan
-import ckan.model as model
-import ckan.plugins as p
-import ckan.lib.search as search
-import ckan.lib.helpers as h
-from ckan.lib.base import config
-
-import ckan.logic as logic
-
+from ckan.common import config
 from ckan.lib.i18n import get_lang
-from ckanext.multilang.model import PackageMultilang, GroupMultilang, TagMultilang, ResourceMultilang
+from ckanext.multilang.model import (
+    GroupMultilang,
+    PackageMultilang,
+    ResourceMultilang,
+    TagMultilang,
+)
 
-log = logging.getLogger(__file__)
+log = logging.getLogger(__name__)
+
 
 def getLanguage():
-    lang = get_lang()
-    
+    try:
+        lang = get_lang()
+    except Exception as e:
+        log.warning(f'Exception while retrieving lang')
+        lang = config.get(u'ckan.locale_default', u'en')
+
     if lang is not None:
         if isinstance(lang, list):
-            lang = unicode(lang[0])
-        else:
-            lang = unicode(lang)
+            lang = lang[0]
     return lang
 
 
@@ -30,8 +29,10 @@ def is_tag_loc_enabled():
     return eval(config.get('multilang.enable_tag_localization', 'False'))
 
 
-def get_localized_pkg(pkg_dict):
-    if pkg_dict != '' and 'type' in pkg_dict:
+def get_localized_pkg(pkg_dict, logname=''):
+    # log.debug(f'PKG {logname}--> {pkg_dict}')
+
+    if pkg_dict and 'type' in pkg_dict:
         #  MULTILANG - Localizing package dict
         lang = getLanguage()
 
@@ -44,8 +45,7 @@ def get_localized_pkg(pkg_dict):
                 if localized_tag:
                     tag['display_name'] = localized_tag.text
 
-        # q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == pkg_dict.get('id'), PackageMultilang.lang == lang).all()
-        q_results = PackageMultilang.get_for_package_id_and_lang(pkg_dict.get('id'), lang) 
+        q_results = PackageMultilang.get_for_package_id_and_lang(pkg_dict.get('id'), lang)
 
         if q_results:
             for result in q_results:
@@ -54,7 +54,6 @@ def get_localized_pkg(pkg_dict):
         #  MULTILANG - Localizing organization sub dict for the dataset edit page
         organization = pkg_dict.get('organization')
         if organization:
-            # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == organization.get('id'), GroupMultilang.lang == lang).all()
             q_results = GroupMultilang.get_for_group_id_and_lang(organization.get('id'), lang)
 
             if q_results:
@@ -65,12 +64,12 @@ def get_localized_pkg(pkg_dict):
 
     return pkg_dict
 
+
 def get_localized_group(org_dict):
     #  MULTILANG - Localizing group dict
     if org_dict != '' and 'type' in org_dict:
         lang = getLanguage()
-        
-        # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == org_dict.get('id'), GroupMultilang.lang == lang).all()
+
         q_results = GroupMultilang.get_for_group_id_and_lang(org_dict.get('id'), lang)
 
         if q_results:
@@ -81,11 +80,11 @@ def get_localized_group(org_dict):
 
     return org_dict
 
+
 def get_localized_resource(resource_dict):
     #  MULTILANG - Localizing resource dict
     lang = getLanguage()
 
-    # q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource_dict.get('id'), ResourceMultilang.lang == lang).all()
     q_results = ResourceMultilang.get_for_resource_id_and_lang(resource_dict.get('id'), lang)
 
     if q_results:

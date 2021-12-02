@@ -1,32 +1,27 @@
 
 import json
-
 import logging
-import ckan.lib.search as search
+
+
 import ckan.lib.dictization.model_dictize as model_dictize
-
-from ckanext.harvest.model import HarvestObject
-
+import ckan.lib.search as search
 from ckan.lib.base import model
-from ckan.model import Session
-
-from ckanext.multilang.model import PackageMultilang, GroupMultilang, TagMultilang
-from ckan.model import Package
-
+from ckan.common import config
+from ckan.model import Package, Session
 from ckan.plugins.core import SingletonPlugin
-
-from ckanext.spatial.lib.csw_client import CswService
+from ckanext.harvest.model import HarvestObject
+from ckanext.multilang.model import (
+    GroupMultilang,
+    PackageMultilang,
+    TagMultilang,
+)
 from ckanext.spatial.harvesters.csw import CSWHarvester
-
-from ckanext.spatial.model import ISODocument
-from ckanext.spatial.model import ISOElement
-from ckanext.spatial.model import ISOResponsibleParty
-from ckanext.spatial.model import ISOKeyword
-
-from ckan.logic import ValidationError, NotFound, get_action
-
-from pylons import config
-from datetime import datetime
+from ckanext.spatial.model import (
+    ISODocument,
+    ISOElement,
+    ISOKeyword,
+    ISOResponsibleParty,
+)
 
 log = logging.getLogger(__name__)
 
@@ -34,111 +29,115 @@ log = logging.getLogger(__name__)
 
 log.info('CSW Multilang harvester: extending ISODocument with PT_FreeText')
 
-## ISO Document xpath definition for localized title and description
+# ISO Document xpath definition for localized title and description
+
 
 class ISOTextGroup(ISOElement):
     elements = [
         ISOElement(
-            name="text",
+            name='text',
             search_paths=[
-                "gmd:LocalisedCharacterString/text()"
+                'gmd:LocalisedCharacterString/text()'
             ],
-            multiplicity="1",
+            multiplicity='1',
         ),
         ISOElement(
-            name="locale",
+            name='locale',
             search_paths=[
-                "gmd:LocalisedCharacterString/@locale"
+                'gmd:LocalisedCharacterString/@locale'
             ],
-            multiplicity="1",
+            multiplicity='1',
         )
     ]
+
 
 class ISOKeywordTextGroup(ISOElement):
     elements = [
         ISOElement(
-            name="name",
+            name='name',
             search_paths=[
-                "../../gco:CharacterString/text()"
+                '../../gco:CharacterString/text()'
             ],
-            multiplicity="1",
+            multiplicity='1',
         ),
         ISOElement(
-            name="text",
+            name='text',
             search_paths=[
-                "gmd:LocalisedCharacterString/text()"
+                'gmd:LocalisedCharacterString/text()'
             ],
-            multiplicity="1",
+            multiplicity='1',
         ),
         ISOElement(
-            name="locale",
+            name='locale',
             search_paths=[
-                "gmd:LocalisedCharacterString/@locale"
+                'gmd:LocalisedCharacterString/@locale'
             ],
-            multiplicity="1",
+            multiplicity='1',
         )
     ]
 
+
 ISODocument.elements.append(
     ISOTextGroup(
-        name="title-text",
+        name='title-text',
         search_paths=[
-            "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup",
-            "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup"
+            'gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup',
+            'gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup'
         ],
-        multiplicity="1..*",
+        multiplicity='1..*',
     )
 )
 
 ISODocument.elements.append(
     ISOTextGroup(
-        name="abstract-text",
+        name='abstract-text',
         search_paths=[
-            "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:abstract/gmd:PT_FreeText/gmd:textGroup",
-            "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:abstract/gmd:PT_FreeText/gmd:textGroup"
+            'gmd:identificationInfo/gmd:MD_DataIdentification/gmd:abstract/gmd:PT_FreeText/gmd:textGroup',
+            'gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:abstract/gmd:PT_FreeText/gmd:textGroup'
         ],
-        multiplicity="1..*",
+        multiplicity='1..*',
     )
 )
 
-## ISO Document xpath definition for localized responsible party
+# ISO Document xpath definition for localized responsible party
 
 ISOResponsibleParty.elements.append(
     ISOTextGroup(
-        name="organisation-name-localized",
+        name='organisation-name-localized',
         search_paths=[
-            "gmd:organisationName/gmd:PT_FreeText/gmd:textGroup"
+            'gmd:organisationName/gmd:PT_FreeText/gmd:textGroup'
         ],
-        multiplicity="1..*",
+        multiplicity='1..*',
     )
 )
 
 ISODocument.elements.append(
     ISOResponsibleParty(
-        name="cited-responsible-party",
+        name='cited-responsible-party',
         search_paths=[
-            "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:citedResponsibleParty/gmd:CI_ResponsibleParty",
-            "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:citation/gmd:CI_Citation/gmd:citedResponsibleParty/gmd:CI_ResponsibleParty"
+            'gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:citedResponsibleParty/gmd:CI_ResponsibleParty',
+            'gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:citation/gmd:CI_Citation/gmd:citedResponsibleParty/gmd:CI_ResponsibleParty'
         ],
-        multiplicity="1..*",
+        multiplicity='1..*',
     )
 )
 
-## ISO Document xpath definition for localized keywords
+# ISO Document xpath definition for localized keywords
 
 ISOKeyword.elements.append(
     ISOKeywordTextGroup(
-        name="keyword-name-localized",
+        name='keyword-name-localized',
         search_paths=[
-            "gmd:keyword/gmd:PT_FreeText/gmd:textGroup"
+            'gmd:keyword/gmd:PT_FreeText/gmd:textGroup'
         ],
-        multiplicity="1..*",
+        multiplicity='1..*',
     )
 )
 
+
 class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
-    _package_dict = {} 
+    _package_dict = {}
 
     _ckan_locales_mapping = {
         'ita': 'it',
@@ -155,22 +154,22 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
         }
 
     ##
-    ## Saves in memory the package_dict localised texts 
+    # Saves in memory the package_dict localised texts
     ##
     def get_package_dict(self, iso_values, harvest_object):
-        package_dict = super(MultilangHarvester, self).get_package_dict(iso_values, harvest_object)      
+        package_dict = super(MultilangHarvester, self).get_package_dict(iso_values, harvest_object)
 
-        self._package_dict = {} 
-        
+        self._package_dict = {}
+
         harvester_config = self.source_config.get('ckan_locales_mapping', {})
         if harvester_config:
             self._ckan_locales_mapping = harvester_config
             log.info('::::: ckan_locales_mapping entry found in harvester configuration :::::')
 
-        if iso_values["abstract-text"] and iso_values["title-text"]:
+        if iso_values['abstract-text'] and iso_values['title-text']:
             log.debug('::::: Collecting localised data from the metadata abstract :::::')
             localised_abstracts = []
-            for abstract_entry in iso_values["abstract-text"]:
+            for abstract_entry in iso_values['abstract-text']:
                 if abstract_entry['text'] and abstract_entry['locale'].lower()[1:]:
                     if self._ckan_locales_mapping[abstract_entry['locale'].lower()[1:]]:
                         localised_abstracts.append({
@@ -184,7 +183,7 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
             log.debug('::::: Collecting localized data from the metadata title :::::')
             localised_titles = []
-            for title_entry in iso_values["title-text"]:
+            for title_entry in iso_values['title-text']:
                 if title_entry['text'] and title_entry['locale'].lower()[1:]:
                     if self._ckan_locales_mapping[title_entry['locale'].lower()[1:]]:
                         localised_titles.append({
@@ -195,15 +194,15 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
                         log.warning('Locale Mapping not found for metadata title, entry skipped!')
                 else:
                     log.warning('TextGroup data not available for metadata title, entry skipped!')
-            
+
             localised_titles.append({
                 'text': iso_values['title'],
-                'locale': self._ckan_locales_mapping[iso_values["metadata-language"].lower()]
+                'locale': self._ckan_locales_mapping[iso_values['metadata-language'].lower()]
             })
 
             localised_abstracts.append({
                 'text': iso_values['abstract'],
-                'locale': self._ckan_locales_mapping[iso_values["metadata-language"].lower()]
+                'locale': self._ckan_locales_mapping[iso_values['metadata-language'].lower()]
             })
 
             self._package_dict = {
@@ -213,21 +212,21 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
             log.info('::::::::: Localised _package_dict saved in memory :::::::::')
 
-        if iso_values["keywords"]:
+        if iso_values['keywords']:
             log.info('::::: Collecting localised data from the metadata keywords :::::')
             localized_tags = []
 
-            for tag_entry in iso_values["keywords"]:
-                #Getting other locales
-                tag_localized_entry = tag_entry["keyword-name-localized"]
+            for tag_entry in iso_values['keywords']:
+                # Getting other locales
+                tag_localized_entry = tag_entry['keyword-name-localized']
 
-                #Getting keyword for default metadata locale
+                # Getting keyword for default metadata locale
                 for keyword in tag_entry['keyword']:
-                    if iso_values["metadata-language"].lower() in self._ckan_locales_mapping: 
+                    if iso_values['metadata-language'].lower() in self._ckan_locales_mapping:
                         localized_tags.append({
                             'text': keyword,
                             'localized_text': keyword,
-                            'locale': self._ckan_locales_mapping[iso_values["metadata-language"].lower()]
+                            'locale': self._ckan_locales_mapping[iso_values['metadata-language'].lower()]
                         })
 
                 for tag_localized in tag_localized_entry:
@@ -245,14 +244,14 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
             self._package_dict['localized_tags'] = localized_tags
 
-        ## Configuring package organizations         
+        # Configuring package organizations
         organisation_mapping = self.source_config.get('organisation_mapping', [])
 
         if organisation_mapping:
             log.info('::::::::: Checking for the Organization :::::::::')
 
             organisation = self.handle_organization(harvest_object, organisation_mapping, iso_values)
-            
+
             if organisation:
                 package_dict['owner_org'] = organisation
 
@@ -260,17 +259,17 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
         return package_dict
 
     def handle_organization(self, harvest_object, organisation_mapping, values):
-        citedResponsiblePartys = values["cited-responsible-party"]
-        
+        citedResponsiblePartys = values['cited-responsible-party']
+
         organisation = None
         for party in citedResponsiblePartys:
-            if party["role"] == "owner":                
+            if party['role'] == 'owner':
                 for org in organisation_mapping:
-                    if org.get("value") in party["organisation-name"]:
-                        existing_org = model.Session.query(model.Group).filter(model.Group.name == org.get("key")).first()
+                    if org.get('value') in party['organisation-name']:
+                        existing_org = model.Session.query(model.Group).filter(model.Group.name == org.get('key')).first()
 
                         if not existing_org:
-                            log.warning('::::::::: Organisation not found in CKAN: %r: assigning default :::::::::', org.get("key"))
+                            log.warning('::::::::: Organisation not found in CKAN: %r: assigning default :::::::::', org.get('key'))
                         else:
                             organisation = existing_org.id
 
@@ -278,15 +277,15 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
                             localized_org = []
 
                             localized_org.append({
-                                'text': org.get("value_" + self._ckan_locales_mapping[values["metadata-language"].lower()]) or org.get("value"),
-                                'locale': self._ckan_locales_mapping[values["metadata-language"].lower()]
+                                'text': org.get('value_' + self._ckan_locales_mapping[values['metadata-language'].lower()]) or org.get('value'),
+                                'locale': self._ckan_locales_mapping[values['metadata-language'].lower()]
                             })
 
-                            for entry in party["organisation-name-localized"]:
+                            for entry in party['organisation-name-localized']:
                                 if entry['text'] and entry['locale'].lower()[1:]:
                                     if self._ckan_locales_mapping[entry['locale'].lower()[1:]]:
                                         localized_org.append({
-                                            'text': org.get("value_" + self._ckan_locales_mapping[entry['locale'].lower()[1:]]) or entry['text'],
+                                            'text': org.get('value_' + self._ckan_locales_mapping[entry['locale'].lower()[1:]]) or entry['text'],
                                             'locale': self._ckan_locales_mapping[entry['locale'].lower()[1:]]
                                         })
                                     else:
@@ -294,34 +293,34 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
                                 else:
                                     log.warning('TextGroup data not available for organization name, entry skipped!')
 
-                            log.debug("::::::::::::: Persisting localized ORG :::::::::::::")      
-                            
+                            log.debug('::::::::::::: Persisting localized ORG :::::::::::::')
+
                             # rows = session.query(GroupMultilang).filter(GroupMultilang.group_id == organisation).all()
                             rows = GroupMultilang.get_for_group_id(organisation)
 
                             for localized_entry in localized_org:
                                 insert = True
                                 for row in rows:
-                                    if row.lang == localized_entry.get("locale") and row.field == 'title':
+                                    if row.lang == localized_entry.get('locale') and row.field == 'title':
                                         # Updating the org localized record
-                                        row.text = localized_entry.get("text")
+                                        row.text = localized_entry.get('text')
                                         row.save()
                                         insert = False
 
-                                        log.debug("::::::::::::: ORG locale successfully updated :::::::::::::") 
+                                        log.debug('::::::::::::: ORG locale successfully updated :::::::::::::')
 
                                 if insert:
                                     # Inserting the missing org localized record
                                     org_dict = {
                                         'id': organisation,
                                         'name': existing_org.name,
-                                        'title': localized_entry.get("text"),
-                                        'description': localized_entry.get("text")
+                                        'title': localized_entry.get('text'),
+                                        'description': localized_entry.get('text')
                                     }
 
-                                    GroupMultilang.persist(org_dict, localized_entry.get("locale"))
-                                    
-                                    log.debug("::::::::::::: ORG locale successfully added :::::::::::::")
+                                    GroupMultilang.persist(org_dict, localized_entry.get('locale'))
+
+                                    log.debug('::::::::::::: ORG locale successfully added :::::::::::::')
 
         return organisation
 
@@ -331,9 +330,9 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
         if import_stage:
             # Get the existing HarvestObject
             existing_object = model.Session.query(HarvestObject) \
-                    .filter(HarvestObject.guid==harvest_object.guid) \
-                    .filter(HarvestObject.current==True) \
-                    .first()
+                .filter(HarvestObject.guid == harvest_object.guid) \
+                .filter(HarvestObject.current == True) \
+                .first()
 
             if existing_object:
                 session = Session
@@ -350,7 +349,7 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
         return import_stage
 
-    def after_import_stage(self, package_dict):        
+    def after_import_stage(self, package_dict):
         log.info('::::::::: Performing after_import_stage  persist operation for localised dataset content :::::::::')
 
         if bool(self._package_dict):
@@ -358,35 +357,35 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
             package_id = package_dict.get('id')
 
-            # Persisting localized packages 
+            # Persisting localized packages
             try:
                 log.info('::::::::: Adding new localised object to the package_multilang table :::::::::')
 
                 loc_titles = self._package_dict.get('localised_titles')
                 if loc_titles:
-                   log.debug('::::: Persisting title locales :::::')
-                   for title in loc_titles:
-                      self.persist_package_multilang_field(package_id, 'title', title.get('text'), title.get('locale'), 'package')
+                    log.debug('::::: Persisting title locales :::::')
+                    for title in loc_titles:
+                        self.persist_package_multilang_field(package_id, 'title', title.get('text'), title.get('locale'), 'package')
 
                 loc_abstracts = self._package_dict.get('localised_abstracts')
                 if loc_abstracts:
-                   log.debug('::::: Persisting abstract locales :::::')
-                   for abstract in loc_abstracts:
-                      self.persist_package_multilang_field(package_id, 'notes', abstract.get('text'), abstract.get('locale'), 'package')
+                    log.debug('::::: Persisting abstract locales :::::')
+                    for abstract in loc_abstracts:
+                        self.persist_package_multilang_field(package_id, 'notes', abstract.get('text'), abstract.get('locale'), 'package')
 
                 log.info('::::::::: OBJECT PERSISTED SUCCESSFULLY :::::::::')
 
                 pass
-            except Exception, e:
+            except Exception as e:
                 # on rollback, the same closure of state
-                # as that of commit proceeds. 
+                # as that of commit proceeds.
                 session.rollback()
 
-                log.error('Exception occurred while persisting DB objects: %s', e)
+                log.error('Exception occurred while persisting DB objects:', exc_info=e)
                 raise
 
             # Persisting localized Tags
-            
+
             loc_tags = self._package_dict.get('localized_tags')
             if loc_tags:
                 log.debug('::::: Persisting tag locales :::::')
@@ -398,20 +397,20 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
                     tag = TagMultilang.by_name(tag_name, tag_lang)
 
                     if tag:
-                        # Update the existing record                        
+                        # Update the existing record
                         if tag_localized_name and tag_localized_name != tag.text:
                             tag.text = tag_localized_name
 
                             try:
                                 tag.save()
-                                log.info('::::::::: OBJECT TAG UPDATED SUCCESSFULLY :::::::::') 
+                                log.info('::::::::: OBJECT TAG UPDATED SUCCESSFULLY :::::::::')
                                 pass
-                            except Exception, e:
+                            except Exception as e:
                                 # on rollback, the same closure of state
-                                # as that of commit proceeds. 
+                                # as that of commit proceeds.
                                 session.rollback()
 
-                                log.error('Exception occurred while persisting DB objects: %s', e)
+                                log.error('Exception occurred while persisting DB objects:', exc_info=e)
                                 raise
                     else:
                         # Create a new localized record
@@ -423,7 +422,7 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
         # Updating Solr Index
         if package_dict:
-            log.info("::: UPDATING SOLR INDEX :::")
+            log.info('::: UPDATING SOLR INDEX :::')
             # solr update here
             psi = search.PackageSearchIndex()
 
@@ -448,7 +447,7 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
             count = 0
             q = []
-            
+
             q.append('id:"%s"' % (package_dict.get('id')))
             count += 1
             if count % BATCH_SIZE == 0:
@@ -460,8 +459,7 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
             # finally commit the changes
             psi.commit()
         else:
-            log.warning("::: package_dict is None: SOLR INDEX CANNOT BE UPDATED! :::")
-
+            log.warning('::: package_dict is None: SOLR INDEX CANNOT BE UPDATED! :::')
 
         return
 
@@ -471,7 +469,7 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
             log.info('::::::::: Updating the localized {0} package field in the package_multilang table :::::::::'.format(field_name))
             record.text = text
             record.save()
-            log.info('::::::::: PACKAGE MULTILANG FIELD UPDATED SUCCESSFULLY :::::::::') 
+            log.info('::::::::: PACKAGE MULTILANG FIELD UPDATED SUCCESSFULLY :::::::::')
         else:
             log.info('::::::::: Adding new localized {0} package field in the package_multilang table :::::::::'.format(field_name))
             PackageMultilang.persist({'id': package_id, 'text': text, 'field': field_name}, locale, field_type)

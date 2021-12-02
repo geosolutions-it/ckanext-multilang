@@ -35,12 +35,12 @@
 
     {% if field.name == 'lang' %}
         {% set available_locales = h.get_available_locales() %}
-        
+
         {% call input_block('lang', field.label, errors[field.name]) %}
           <select id="field-{{ field.name }}-select" name="{{ field.name }}" data-module="autocomplete" data-module-dropdown-class="lang-dropdown" data-module-container-class="lang-container">
             <option value="" {% if data and not data.get(field.name) %}selected="selected"{% endif %}>{% trans %}All languages{% endtrans %}</option>
         {% for locale in available_locales %}
-           <option value="{{ locale }}" {% if data and data.get(field.name) and locale.identifier == data.get(field.name) %}selected="selected"{% endif %}> 
+           <option value="{{ locale }}" {% if data and data.get(field.name) and locale.identifier == data.get(field.name) %}selected="selected"{% endif %}>
             {{ locale.display_name or locale.english_name }}
           </option>
         {% endfor %}
@@ -50,7 +50,3 @@
     {% endif %}
 
 {% endfor %}
-
-
-
-
