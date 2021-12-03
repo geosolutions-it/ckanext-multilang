@@ -16,7 +16,7 @@ PKG_LOCALIZED_FIELDS = [
 
 
 def after_create_dataset(context, obj_dict, lang):
-    log.info(f'--> after_create_dataset {obj_dict}')
+    # log.debug(f'--> after_create_dataset {obj_dict}')
 
     # #  MULTILANG - retrieving dict for localized tag's strings
     # extra_tag = None
@@ -31,14 +31,16 @@ def after_create_dataset(context, obj_dict, lang):
     # self.localized_tags_persist(extra_tag, pkg_dict, lang)
 
     # MULTILANG - persisting the localized package dict
-    log.info('::::: Persisting localised metadata locale :::::')
+    id = obj_dict.get('id')
+    log.debug(f'Creating localized PACKAGE fields id:{id} lang:{lang}')
+
     for field in PKG_LOCALIZED_FIELDS:
         if obj_dict.get(field):
-            PackageMultilang.persist({'id': obj_dict.get('id'), 'field': field, 'text': obj_dict.get(field)}, lang)
+            log.debug(f'  --> PACKAGE id:{id} lang:{lang} field:{field} text:{obj_dict.get(field)}')
+            PackageMultilang.persist({'id': id, 'field': field, 'text': obj_dict.get(field)}, lang)
 
 
 def after_update_dataset(context, pkg_dict, lang):
-    log.info(f'--> after_update_dataset {pkg_dict}')
 
     # #  MULTILANG - retrieving dict for localized tag's strings
     #  extra_tag = None
@@ -53,26 +55,28 @@ def after_update_dataset(context, pkg_dict, lang):
     # #  MULTILANG - persisting package dict
     # log.info(':::::::::::: Saving the corresponding localized title and abstract :::::::::::::::')
 
-    # q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == c.pkg_dict.get('id'), PackageMultilang.lang == lang).all()
-
     pkg_id = pkg_dict.get('id')
+
+    log.debug(f'Updating localized PACKAGE fields id:{pkg_id} lang:{lang}')
+
     q_results = PackageMultilang.get_for_package_id_and_lang(pkg_id, lang)
 
     if q_results:
-        pkg_processed_field = []
+        processed_fields = []
         for result in q_results:
             # do not update multilang field if original pkg dict doesn't have this field anymore.
             # otherwise IntegrityError will raise because text will be None
             if result.field in pkg_dict:
-                pkg_processed_field.append(result.field)
-                log.debug('::::::::::::::: value before %r', result.text)
-                result.text = pkg_dict.get(result.field)
-                log.debug('::::::::::::::: value after %r', result.text)
+                field_name = result.field
+                log.debug(f'Updating localized PACKAGE field {field_name} lang:{lang} OLD:{result.text}')
+                log.debug(f'Updating localized PACKAGE field {field_name} lang:{lang} NEW:{pkg_dict.get(field_name)}')
+                processed_fields.append(field_name)
+                result.text = pkg_dict.get(field_name)
                 result.save()
 
         # Check for missing localized fields in DB
         for field_name in PKG_LOCALIZED_FIELDS:
-            if field_name not in pkg_processed_field:
+            if field_name not in processed_fields:
                 field_data = pkg_dict.get(field_name)
                 log.debug(f'Adding localized field {field_name}::{lang}')
                 if field_data:
@@ -81,8 +85,7 @@ def after_update_dataset(context, pkg_dict, lang):
                                               'text': field_data},
                                              lang)
     else:
-        log.info(
-            ':::::::::::: Localised fields are missing in package_multilang table, persisting defaults using values in the table package :::::::::::::::')
+        log.info(f'No localized fields for package {pkg_id}, creating defaults values...')
         for field_name in PKG_LOCALIZED_FIELDS:
             log.debug(f'Storing localized field {field_name}::{lang}')
             field_data = pkg_dict.get(field_name)

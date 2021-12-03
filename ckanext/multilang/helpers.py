@@ -30,7 +30,7 @@ def is_tag_loc_enabled():
 
 
 def get_localized_pkg(pkg_dict, logname=''):
-    log.debug(f'PKG {logname}--> {pkg_dict}')
+    # log.debug(f'PKG {logname}--> {pkg_dict}')
 
     if pkg_dict and 'type' in pkg_dict:
         #  MULTILANG - Localizing package dict
@@ -45,7 +45,6 @@ def get_localized_pkg(pkg_dict, logname=''):
                 if localized_tag:
                     tag['display_name'] = localized_tag.text
 
-        # q_results = model.Session.query(PackageMultilang).filter(PackageMultilang.package_id == pkg_dict.get('id'), PackageMultilang.lang == lang).all()
         q_results = PackageMultilang.get_for_package_id_and_lang(pkg_dict.get('id'), lang)
 
         if q_results:
@@ -55,7 +54,6 @@ def get_localized_pkg(pkg_dict, logname=''):
         #  MULTILANG - Localizing organization sub dict for the dataset edit page
         organization = pkg_dict.get('organization')
         if organization:
-            # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == organization.get('id'), GroupMultilang.lang == lang).all()
             q_results = GroupMultilang.get_for_group_id_and_lang(organization.get('id'), lang)
 
             if q_results:
@@ -72,7 +70,6 @@ def get_localized_group(org_dict):
     if org_dict != '' and 'type' in org_dict:
         lang = getLanguage()
 
-        # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == org_dict.get('id'), GroupMultilang.lang == lang).all()
         q_results = GroupMultilang.get_for_group_id_and_lang(org_dict.get('id'), lang)
 
         if q_results:
@@ -88,7 +85,6 @@ def get_localized_resource(resource_dict):
     #  MULTILANG - Localizing resource dict
     lang = getLanguage()
 
-    # q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource_dict.get('id'), ResourceMultilang.lang == lang).all()
     q_results = ResourceMultilang.get_for_resource_id_and_lang(resource_dict.get('id'), lang)
 
     if q_results:

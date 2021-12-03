@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 
 from babel.core import Locale
 
@@ -35,11 +36,32 @@ from ckanext.multilang.logic.resource import (
 
 from ckanext.multilang.logic.group import delete_multilang_group
 from ckanext.multilang.logic.tag import delete_multilang_tag
+from enum import Enum
+
+
+class OBJ_TYPE(Enum):
+    DATASET = 1
+    RESOURCE = 2
+    GROUP = 3
+    ORG = 4
+
 
 log = logging.getLogger(__name__)
 
+def _find_obj_type(obj_dict):
+    # Some heuristic to find out the object type
+
+    otype = obj_dict.get('type')
+    if otype == 'dataset':
+        return OBJ_TYPE.DATASET
+    if 'resource_type' in obj_dict:
+        return OBJ_TYPE.RESOURCE
+
+    raise Exception(f'Type unknown for {obj_dict}')
+
 
 class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
+
     plugins.implements(plugins.IClick)
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
@@ -76,14 +98,20 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
         }
 
     def before_index(self, pkg_dict):
-        from ckanext.multilang.model import PackageMultilang
-        multilang_localized = PackageMultilang.get_for_package(pkg_dict['id'])
+        lang = helpers.getLanguage()
+        pml_list = PackageMultilang.get_for_package(pkg_dict['id'])
 
-        for package in multilang_localized:
-            log.debug(f'...Creating index for package localized field: LANG:{package.lang} FIELD:{package.field}')
-            key = f'package_multilang_localized_{package.field}_{package.lang}'
-            pkg_dict[key] = package.text
-            log.debug(f'Index successfully created for package: {key} -> {package.text}')
+        for ml_package in pml_list:
+            # reading the values from the dict if possibile, since the DB may have not been updated yet
+            if ml_package.field in pkg_dict and lang == ml_package.lang:
+                value = pkg_dict[ml_package.field]
+            else:
+                value = ml_package.text
+
+            log.debug(f'Creating index for package localized field: '
+                      f'LANG:{ml_package.lang} FIELD:{ml_package.field} --> {value}')
+            key = f'package_multilang_localized_{ml_package.field}_{ml_package.lang}'
+            pkg_dict[key] = value
 
         return pkg_dict
 
@@ -96,7 +124,6 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
         if lang:
             if otype == 'group' or otype == 'organization':
                 #  MULTILANG - Localizing Group/Organizzation names and descriptions in search list
-                # q_results = model.Session.query(GroupMultilang).filter(GroupMultilang.group_id == odict.get('id'), GroupMultilang.lang == lang).all()
                 q_results = GroupMultilang.get_for_group_id_and_lang(odict.get('id'), lang)
 
                 if q_results:
@@ -157,6 +184,7 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
     def create(self, model_obj):
         otype = model_obj.type
         lang = helpers.getLanguage()
+        log.debug(f'Dispatching create for TYPE:{otype} LANG:{lang}')
 
         # CREATE GROUP OR ORGANIZATION
         if otype == 'group' or otype == 'organization' and lang:
@@ -173,6 +201,7 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
     def edit(self, model_obj):
         otype = model_obj.type
         lang = helpers.getLanguage()
+        log.debug(f'Dispatching edit for TYPE:{otype} LANG:{lang}')
 
         # EDIT GROUP OR ORGANIZATION
         if otype == 'group' or otype == 'organization' and lang:
@@ -228,7 +257,6 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
         lang = helpers.getLanguage()
         if lang:
             #  MULTILANG - Localizing resources dict
-            # q_results = model.Session.query(ResourceMultilang).filter(ResourceMultilang.resource_id == resource_dict.get('id'), ResourceMultilang.lang == lang).all()
             q_results = ResourceMultilang.get_for_resource_id_and_lang(resource_dict.get('id'), lang)
 
             if q_results:
@@ -238,26 +266,27 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
         return resource_dict
 
     def after_update(self, context, obj_dict):
-        otype = obj_dict.get('type')
+        otype = _find_obj_type(obj_dict)
         lang = helpers.getLanguage()
         log.debug(f'Dispatching after_update for TYPE:{otype} LANG:{lang}')
 
         if lang:
-            if otype == 'resource':
+            if otype == OBJ_TYPE.RESOURCE:
                 after_update_resource(context, obj_dict, lang)
-            elif otype == 'dataset':
+            elif otype == OBJ_TYPE.DATASET:
                 after_update_dataset(context, obj_dict, lang)
 
-    def after_create(self, context, data):
-        otype = data.get('type')
+
+    def after_create(self, context, obj_dict):
+        otype = _find_obj_type(obj_dict)
         lang = helpers.getLanguage()
         log.debug(f'Dispatching after_create for TYPE:{otype} LANG:{lang}')
 
         if lang:
-            if otype == 'resource':
-                after_create_resource(context, data, lang)
-            elif otype == 'dataset':
-                after_create_dataset(context, data, lang)
+            if otype == OBJ_TYPE.RESOURCE:
+                after_create_resource(context, obj_dict, lang)
+            elif otype == OBJ_TYPE.DATASET:
+                after_create_dataset(context, obj_dict, lang)
 
 
 class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
