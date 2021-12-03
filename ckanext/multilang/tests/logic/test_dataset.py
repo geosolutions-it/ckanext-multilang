@@ -40,6 +40,7 @@ class TestDeleteDataset(object):
             "package_id": dataset.get('id'),
             "url": "http://data",
             "name": "A nice resource",
+            "description": "A nice resource",
         }
         resource = helpers.call_action("resource_create", context, **params)
 
