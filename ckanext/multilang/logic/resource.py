@@ -31,6 +31,7 @@ def after_update_resource(context, resource, lang):
             log.info('Localised fields are missing in resource_multilang table, persisting ...')
             ResourceMultilang.persist(r, lang)
 
+
 # def before_view_resource(data):
 
 
