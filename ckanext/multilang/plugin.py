@@ -48,6 +48,7 @@ class OBJ_TYPE(Enum):
 
 log = logging.getLogger(__name__)
 
+
 def _find_obj_type(obj_dict):
     # Some heuristic to find out the object type
 
@@ -61,7 +62,6 @@ def _find_obj_type(obj_dict):
 
 
 class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
-
     plugins.implements(plugins.IClick)
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
@@ -275,7 +275,6 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
                 after_update_resource(context, obj_dict, lang)
             elif otype == OBJ_TYPE.DATASET:
                 after_update_dataset(context, obj_dict, lang)
-
 
     def after_create(self, context, obj_dict):
         otype = _find_obj_type(obj_dict)

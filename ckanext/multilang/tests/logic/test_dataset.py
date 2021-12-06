@@ -9,9 +9,10 @@ import ckan.tests.helpers as helpers
 from ckanext.multilang.model import PackageMultilang, ResourceMultilang, GroupMultilang, TagMultilang
 import ckan.plugins.toolkit as tk
 
+
 @pytest.mark.usefixtures('clean_postgis', 'clean_db', 'clean_index', 'create_postgis_tables',
                          'multilang_setup', 'with_request_context'
-)
+                         )
 class TestDeleteDataset(object):
     def test_delete_dataset(self):
         user = factories.Sysadmin()
@@ -108,11 +109,6 @@ class TestDeleteDataset(object):
         resources = ResourceMultilang.get_for_resource_id(resource.get('id'))
         tags = TagMultilang.get_for_tag_id(tag.get('id'))
 
-        print(multi_lang_packages)
-        print(groups)
-        print(tags)
-        print(resources)
-        assert not multi_lang_packages
-        assert not groups
-        assert not tags
-
+        assert len(multi_lang_packages) == 0
+        assert len(groups) == 0
+        assert len(tags) == 0
