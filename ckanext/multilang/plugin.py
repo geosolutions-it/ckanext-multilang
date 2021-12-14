@@ -40,6 +40,7 @@ class OBJ_TYPE(Enum):
     RESOURCE = 2
     GROUP = 3
     ORG = 4
+    HARVEST = 5
 
 
 log = logging.getLogger(__name__)
@@ -50,6 +51,8 @@ def _find_obj_type(obj_dict):
     otype = obj_dict.get('type')
     if otype == 'dataset':
         return OBJ_TYPE.DATASET
+    if otype == 'harvest':
+        return OBJ_TYPE.HARVEST
     if 'resource_type' in obj_dict:
         return OBJ_TYPE.RESOURCE
 
