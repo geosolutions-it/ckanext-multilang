@@ -1,6 +1,6 @@
 import click
 
-from ckanext.multilang.model import setup as db_setup
+from ckanext.multilang.model import setup_db
 
 
 @click.group()
@@ -24,5 +24,8 @@ def initdb():
 
     :return:
     '''
-    db_setup()
-    click.secho('Multilingual DB tables created', fg=u"green")
+    created = setup_db()
+    if created:
+        click.secho('Multilingual DB tables created', fg=u"green")
+    else:
+        click.secho('Multilingual DB tables not created', fg=u"yellow")

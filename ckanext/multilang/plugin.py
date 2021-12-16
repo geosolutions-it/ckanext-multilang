@@ -3,15 +3,15 @@ from enum import Enum
 
 from babel.core import Locale
 
+from ckan.common import _
+from ckan.lib import helpers as h
 import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.model as model
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
+
 import ckanext.multilang.actions as actions
 import ckanext.multilang.helpers as helpers
-from ckan.common import _, config, g, session
-from ckan.lib import helpers as h
-
 from ckanext.multilang.commands import cli
 from ckanext.multilang.model import (
     GroupMultilang,
@@ -19,20 +19,16 @@ from ckanext.multilang.model import (
     ResourceMultilang,
     TagMultilang,
 )
-
 from ckanext.multilang.logic.package import (
     after_create_dataset,
     after_update_dataset,
     before_view_dataset,
 )
-
 from ckanext.multilang.logic.resource import (
     after_create_resource,
     after_update_resource,
     # before_view_resource,
 )
-
-from enum import Enum
 
 
 class OBJ_TYPE(Enum):
@@ -44,6 +40,7 @@ class OBJ_TYPE(Enum):
 
 
 log = logging.getLogger(__name__)
+
 
 def _find_obj_type(obj_dict):
     # Some heuristic to find out the object type
@@ -186,13 +183,18 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
         log.debug(f'Dispatching create for TYPE:{otype} LANG:{lang}')
 
         # CREATE GROUP OR ORGANIZATION
-        if otype == 'group' or otype == 'organization' and lang:
-            log.info('::::: Persisting localised metadata locale :::::')
+        if otype in ('group', 'organization',) and lang:
+            log.info(f'Storing multilang {lang} info for {otype} "{model_obj.name}"')
             lang = helpers.getLanguage()
 
-            group = model_dictize.group_dictize(model_obj, {'model': model, 'session': model.Session})
+            group_dict = {
+                'id': model_obj.id,
+                'name': model_obj.name,
+                'title': model_obj.title,
+                'description': model_obj.description,
+            }
 
-            GroupMultilang.persist(group, lang)
+            GroupMultilang.persist(group_dict, lang)
 
     ## ##############
     # EDIT

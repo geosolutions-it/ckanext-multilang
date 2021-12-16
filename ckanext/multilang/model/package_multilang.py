@@ -5,7 +5,16 @@ from sqlalchemy import Column, ForeignKey, Table, types
 from ckan.model import Session, meta
 from ckan.model.domain_object import DomainObject
 
-__all__ = ['PackageMultilang', 'package_multilang_table', 'GroupMultilang', 'ResourceMultilang', 'group_multilang_table', 'TagMultilang', 'tag_multilang_table', 'setup']
+__all__ = [
+    'PackageMultilang',
+    'package_multilang_table',
+    'GroupMultilang',
+    'ResourceMultilang',
+    'group_multilang_table',
+    'TagMultilang',
+    'tag_multilang_table',
+    'setup_db',
+]
 
 log = logging.getLogger(__name__)
 
@@ -41,71 +50,31 @@ tag_multilang_table = Table('tag_multilang', meta.metadata,
     Column('text', types.UnicodeText, nullable=False, index=True))
 
 
-def setup():
-    log.debug('Multilingual tables defined in memory')
+def setup_db():
+    # log.debug('Multilingual tables defined in memory')
+    created = False
 
-    # Setting up package multilang table
-    if not package_multilang_table.exists():
-        try:
-            package_multilang_table.create()
-        except Exception as e:
-            # Make sure the table does not remain incorrectly created
-            if package_multilang_table.exists():
-                Session.execute('DROP TABLE package_multilang')
-                Session.commit()
+    for t in (package_multilang_table,
+              group_multilang_table,
+              resource_multilang_table,
+              tag_multilang_table,
+              ):
 
-            raise e
+        if t.exists():
+            log.debug(f'MultiLang: table {t.name} already exists')
+        else:
+            try:
+                log.info(f'MultiLang: creating table {t.name}')
+                t.create()
+                created = True
+            except Exception as e:
+                # Make sure the table does not remain incorrectly created
+                if t.exists():
+                    Session.execute(f'DROP TABLE {t.name}')
+                    Session.commit()
+                raise e
 
-        log.info('Package Multilingual table created')
-    else:
-        log.info('Package Multilingual table already exist')
-
-    # Setting up group multilang table
-    if not group_multilang_table.exists():
-        try:
-            group_multilang_table.create()
-        except Exception as e:
-            # Make sure the table does not remain incorrectly created
-            if group_multilang_table.exists():
-                Session.execute('DROP TABLE group_multilang')
-                Session.commit()
-            raise e
-
-        log.info('Group Multilingual table created')
-    else:
-        log.info('Group Multilingual table already exist')
-
-    # Setting up resource multilang table
-    if not resource_multilang_table.exists():
-        try:
-            resource_multilang_table.create()
-        except Exception as e:
-            # Make sure the table does not remain incorrectly created
-            if resource_multilang_table.exists():
-                Session.execute('DROP TABLE resource_multilang')
-                Session.commit()
-
-            raise e
-
-        log.info('Resource Multilingual table created')
-    else:
-        log.info('Resource Multilingual table already exist')
-
-    # Setting up tag multilang table
-    if not tag_multilang_table.exists():
-        try:
-            tag_multilang_table.create()
-        except Exception as e:
-            # Make sure the table does not remain incorrectly created
-            if tag_multilang_table.exists():
-                Session.execute('DROP TABLE tag_multilang')
-                Session.commit()
-
-            raise e
-
-        log.info('Tag Multilingual table created')
-    else:
-        log.info('Tag Multilingual table already exist')
+    return created
 
 
 class PackageMultilang(DomainObject):
@@ -188,12 +157,12 @@ class GroupMultilang(DomainObject):
         return records
 
     @classmethod
-    def persist(self, group, lang):
+    def persist(cls, group, lang):
         session = meta.Session
         try:
             session.add_all([
-                self(group_id=group.get('id'), name=group.get('name'), field='title', lang=lang, text=group.get('title')),
-                self(group_id=group.get('id'), name=group.get('name'), field='description', lang=lang, text=group.get('description')),
+                cls(group_id=group.get('id'), name=group.get('name'), field='title', lang=lang, text=group.get('title')),
+                cls(group_id=group.get('id'), name=group.get('name'), field='description', lang=lang, text=group.get('description')),
             ])
 
             session.commit()
