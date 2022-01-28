@@ -1,7 +1,9 @@
-import unittest
-from ckanext.multilang.plugin import MultilangPlugin
+from ckan import plugins as p
 
 
-class TestPlugin(unittest.TestCase):
-    def test_plugin(self):
-        self.assertTrue(MultilangPlugin())
+class TestMultilangPlugin(p.SingletonPlugin):
+
+    p.implements(p.IConfigurer, inherit=True)
+
+    def update_config(self, config):
+        p.toolkit.add_template_directory(config, "templates")

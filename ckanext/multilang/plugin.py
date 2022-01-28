@@ -24,14 +24,18 @@ from ckanext.multilang.logic.package import (
     after_create_dataset,
     after_update_dataset,
     before_view_dataset,
+    delete_multilang_dataset
 )
 
 from ckanext.multilang.logic.resource import (
     after_create_resource,
     after_update_resource,
+    delete_multilang_resource,
     # before_view_resource,
 )
 
+from ckanext.multilang.logic.group import delete_multilang_group
+from ckanext.multilang.logic.tag import delete_multilang_tag
 from enum import Enum
 
 
@@ -44,6 +48,7 @@ class OBJ_TYPE(Enum):
 
 
 log = logging.getLogger(__name__)
+
 
 def _find_obj_type(obj_dict):
     # Some heuristic to find out the object type
@@ -60,7 +65,6 @@ def _find_obj_type(obj_dict):
 
 
 class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
-
     plugins.implements(plugins.IClick)
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
@@ -233,13 +237,23 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
                 create_new = True
 
             if create_new:
-                log.info(':::::::::::: Localized fields are missing in package_multilang table, persisting defaults using values in the table group :::::::::::::::')
+                log.info(
+                    ':::::::::::: Localized fields are missing in package_multilang table, persisting defaults using values in the table group :::::::::::::::')
                 GroupMultilang.persist(group, lang)
 
     ## ##############
     # DELETE
     ## ##############
     def delete(self, model_obj):
+        log.debug(f'delete --> {model_obj}: {isinstance(model_obj, model.Package)}')
+        if isinstance(model_obj, model.Package):
+            delete_multilang_dataset(model_obj)
+        elif isinstance(model_obj, model.Group):
+            delete_multilang_group(model_obj)
+        elif isinstance(model_obj, model.Resource):
+            delete_multilang_resource(model_obj)
+        elif isinstance(model_obj, model.Tag):
+            delete_multilang_tag(model_obj)
         return model_obj
 
     def before_show(self, resource_dict):
@@ -278,7 +292,6 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
 
 
 class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
-
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.ITemplateHelpers)
 
