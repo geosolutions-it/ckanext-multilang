@@ -25,7 +25,7 @@ package_multilang_table = Table('package_multilang', meta.metadata,
     Column('field', types.UnicodeText, nullable=False, index=True),
     Column('field_type', types.UnicodeText, nullable=False, index=True),
     Column('lang', types.UnicodeText, nullable=False, index=True),
-    Column('text', types.UnicodeText, nullable=False, index=True))
+    Column('text', types.UnicodeText, nullable=False, index=False))
 
 group_multilang_table = Table('group_multilang', meta.metadata,
     Column('id', types.Integer, primary_key=True),
@@ -33,21 +33,21 @@ group_multilang_table = Table('group_multilang', meta.metadata,
     Column('name', types.UnicodeText, nullable=False, index=True),
     Column('field', types.UnicodeText, nullable=False, index=True),
     Column('lang', types.UnicodeText, nullable=False, index=True),
-    Column('text', types.UnicodeText, nullable=False, index=True))
+    Column('text', types.UnicodeText, nullable=False, index=False))
 
 resource_multilang_table = Table('resource_multilang', meta.metadata,
     Column('id', types.Integer, primary_key=True),
     Column('resource_id', types.UnicodeText, ForeignKey('resource.id', ondelete='CASCADE'), nullable=False),
     Column('field', types.UnicodeText, nullable=False, index=True),
     Column('lang', types.UnicodeText, nullable=False, index=True),
-    Column('text', types.UnicodeText, nullable=False, index=True))
+    Column('text', types.UnicodeText, nullable=False, index=False))
 
 tag_multilang_table = Table('tag_multilang', meta.metadata,
     Column('id', types.Integer, primary_key=True),
     Column('tag_id', types.UnicodeText, ForeignKey('tag.id', ondelete='CASCADE'), nullable=False),
     Column('tag_name', types.UnicodeText, nullable=False, index=True),
     Column('lang', types.UnicodeText, nullable=False, index=True),
-    Column('text', types.UnicodeText, nullable=False, index=True))
+    Column('text', types.UnicodeText, nullable=False, index=False))
 
 
 def setup_db():
