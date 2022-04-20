@@ -213,9 +213,11 @@ class ResourceMultilang(DomainObject):
     def persist(self, resource, lang):
         session = meta.Session
         try:
+            name = resource.get('name')
+            desc = resource.get('description') or ''
             session.add_all([
-                self(resource_id=resource.get('id'), field='name', lang=lang, text=resource.get('name')),
-                self(resource_id=resource.get('id'), field='description', lang=lang, text=resource.get('description')),
+                self(resource_id=resource.get('id'), field='name', lang=lang, text=name),
+                self(resource_id=resource.get('id'), field='description', lang=lang, text=desc),
             ])
 
             session.commit()
