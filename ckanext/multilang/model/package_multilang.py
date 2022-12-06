@@ -105,10 +105,16 @@ class PackageMultilang(DomainObject):
 
     @classmethod
     def persist(self, package, lang, field_type='package'):
+
+        if package.get('text') is None:
+            log.warning(f"Skipping null text for pkg:{package.get('id')} lang:{lang} field:{package.get('field')}")
+            return
+
         session = meta.Session
         try:
             session.add_all([
-                PackageMultilang(package_id=package.get('id'), field=package.get('field'), field_type=field_type, lang=lang, text=package.get('text')),
+                PackageMultilang(package_id=package.get('id'), field=package.get('field'),
+                                 field_type=field_type, lang=lang, text=package.get('text')),
             ])
 
             session.commit()
@@ -200,7 +206,7 @@ class ResourceMultilang(DomainObject):
     @classmethod
     def get_for_resource_id(self, resource_id):
         obj = meta.Session.query(self).autoflush(False)
-        records = obj.filter_by(resource_id=resource_id)
+        records = obj.filter_by(resource_id=resource_id).all()
         return records
 
     @classmethod
@@ -253,6 +259,12 @@ class TagMultilang(DomainObject):
         self.tag_name = tag_name
         self.lang = lang
         self.text = text
+
+    @classmethod
+    def get_for_tag_id(self, tag_id):
+        obj = meta.Session.query(self).autoflush(False)
+        records = obj.filter(self.tag_id == tag_id).all()
+        return records
 
     @classmethod
     def get_all(cls, tag_name, tag_lang=None):
