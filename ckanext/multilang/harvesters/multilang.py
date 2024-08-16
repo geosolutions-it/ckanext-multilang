@@ -5,7 +5,7 @@ import logging
 
 import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.lib.search as search
-from ckan.lib.base import model
+from ckan import model
 from ckan.common import config
 from ckan.model import Package, Session
 from ckan.plugins.core import SingletonPlugin
@@ -16,7 +16,7 @@ from ckanext.multilang.model import (
     TagMultilang,
 )
 from ckanext.spatial.harvesters.csw import CSWHarvester
-from ckanext.spatial.model import (
+from ckanext.spatial.harvested_metadata import (
     ISODocument,
     ISOElement,
     ISOKeyword,
@@ -160,24 +160,27 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
         package_dict = super(MultilangHarvester, self).get_package_dict(iso_values, harvest_object)
 
         self._package_dict = {}
-
+        
         harvester_config = self.source_config.get('ckan_locales_mapping', {})
         if harvester_config:
             self._ckan_locales_mapping = harvester_config
             log.info('::::: ckan_locales_mapping entry found in harvester configuration :::::')
-
+    
         if iso_values['abstract-text'] and iso_values['title-text']:
             log.debug('::::: Collecting localised data from the metadata abstract :::::')
             localised_abstracts = []
             for abstract_entry in iso_values['abstract-text']:
                 if abstract_entry['text'] and abstract_entry['locale'].lower()[1:]:
-                    if self._ckan_locales_mapping[abstract_entry['locale'].lower()[1:]]:
-                        localised_abstracts.append({
-                            'text': abstract_entry['text'],
-                            'locale': self._ckan_locales_mapping[abstract_entry['locale'].lower()[1:]]
-                        })
-                    else:
-                        log.warning('Locale Mapping not found for metadata abstract, entry skipped!')
+                    # We comment out this if because abstract_entry['locale'] is equal with the CKAN
+                    # definition so we don't need the ckan_locales_mapping for now
+                    # if self._ckan_locales_mapping[abstract_entry['locale'].lower()[1:]]:
+                    localised_abstracts.append({
+                        'text': abstract_entry['text'],
+                        'locale': abstract_entry['locale'].lower()[1:]
+                        # 'locale': self._ckan_locales_mapping[abstract_entry['locale'].lower()[1:]]
+                    })
+                    #else:
+                    #   log.warning('Locale Mapping not found for metadata abstract, entry skipped!')
                 else:
                     log.warning('TextGroup data not available for metadata abstract, entry skipped!')
 
@@ -185,18 +188,21 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
             localised_titles = []
             for title_entry in iso_values['title-text']:
                 if title_entry['text'] and title_entry['locale'].lower()[1:]:
-                    if self._ckan_locales_mapping[title_entry['locale'].lower()[1:]]:
-                        localised_titles.append({
-                            'text': title_entry['text'],
-                            'locale': self._ckan_locales_mapping[title_entry['locale'].lower()[1:]]
-                        })
-                    else:
-                        log.warning('Locale Mapping not found for metadata title, entry skipped!')
+                    # the same as above
+                    # if self._ckan_locales_mapping[title_entry['locale'].lower()[1:]]:
+                    localised_titles.append({
+                        'text': title_entry['text'],
+                        # 'locale': self._ckan_locales_mapping[title_entry['locale'].lower()[1:]]
+                        'locale': title_entry['locale'].lower()[1:]
+                    })
+                    #else:
+                    #    log.warning('Locale Mapping not found for metadata title, entry skipped!')
                 else:
                     log.warning('TextGroup data not available for metadata title, entry skipped!')
 
             localised_titles.append({
                 'text': iso_values['title'],
+                # because iso_values['metadata-language']=ita we remove the last letter
                 'locale': self._ckan_locales_mapping[iso_values['metadata-language'].lower()]
             })
 
@@ -231,14 +237,15 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
                 for tag_localized in tag_localized_entry:
                     if tag_localized['text'] and tag_localized['locale'].lower()[1:]:
-                        if self._ckan_locales_mapping[tag_localized['locale'].lower()[1:]]:
-                            localized_tags.append({
-                                'text': tag_localized['name'],
-                                'localized_text': tag_localized['text'],
-                                'locale': self._ckan_locales_mapping[tag_localized['locale'].lower()[1:]]
-                            })
-                        else:
-                            log.warning('Locale Mapping not found for metadata keyword: %r, entry skipped!', tag_localized['name'])
+                        # if self._ckan_locales_mapping[tag_localized['locale'].lower()[1:]]:
+                        localized_tags.append({
+                            'text': tag_localized['name'],
+                            'localized_text': tag_localized['text'],
+                            # 'locale': self._ckan_locales_mapping[tag_localized['locale'].lower()[1:]]
+                            'locale': tag_localized['locale'].lower()[1:]
+                        })
+                        #else:
+                        #    log.warning('Locale Mapping not found for metadata keyword: %r, entry skipped!', tag_localized['name'])
                     else:
                         log.warning('TextGroup data not available for metadata keyword: %r, entry skipped!', tag_localized['name'])
 
@@ -283,13 +290,14 @@ class MultilangHarvester(CSWHarvester, SingletonPlugin):
 
                             for entry in party['organisation-name-localized']:
                                 if entry['text'] and entry['locale'].lower()[1:]:
-                                    if self._ckan_locales_mapping[entry['locale'].lower()[1:]]:
-                                        localized_org.append({
-                                            'text': org.get('value_' + self._ckan_locales_mapping[entry['locale'].lower()[1:]]) or entry['text'],
-                                            'locale': self._ckan_locales_mapping[entry['locale'].lower()[1:]]
-                                        })
-                                    else:
-                                        log.warning('Locale Mapping not found for organization name, entry skipped!')
+                                    # if self._ckan_locales_mapping[entry['locale'].lower()[1:]]:
+                                    localized_org.append({
+                                        'text': org.get('value_' + self._ckan_locales_mapping[entry['locale'].lower()[1:]]) or entry['text'],
+                                        # 'locale': self._ckan_locales_mapping[entry['locale'].lower()[1:]]
+                                        'locale': entry['locale'].lower()[1:]
+                                    })
+                                    #else:
+                                    #    log.warning('Locale Mapping not found for organization name, entry skipped!')
                                 else:
                                     log.warning('TextGroup data not available for organization name, entry skipped!')
 

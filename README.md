@@ -49,6 +49,8 @@ To install ckanext-multilang:
     cd ckanext-multilang
 
     pip install -e .
+    
+    python setup.py develop
 
 3. Initialize the DB with the mandatory Tables needed for localized records:
 
