@@ -93,7 +93,7 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
             'organization_list': actions.organization_list
         }
 
-    def before_index(self, pkg_dict):
+    def before_dataset_index(self, pkg_dict):
         lang = helpers.getLanguage()
         pml_list = PackageMultilang.get_for_package(pkg_dict['id'])
 
@@ -110,6 +110,11 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
             pkg_dict[key] = value
 
         return pkg_dict
+
+    def before_dataset_view(self, odict):
+        lang = helpers.getLanguage()
+        log.debug(f'Dispatching before_dataset_view for LANG:{lang}')
+        return before_view_dataset(odict, lang) if lang else odict
 
     def before_view(self, odict):
         otype = odict.get('type')
@@ -128,12 +133,9 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
                         if result.field == 'title':
                             odict['display_name'] = result.text
 
-            elif otype == 'dataset':
-                odict = before_view_dataset(odict, lang)
-
         return odict
 
-    def after_search(self, search_results, search_params):
+    def after_dataset_search(self, search_results, search_params):
         search_facets = search_results.get('search_facets')
         lang = helpers.getLanguage()
 
@@ -244,7 +246,7 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
     def delete(self, model_obj):
         return model_obj
 
-    def before_show(self, resource_dict):
+    def before_resource_show(self, resource_dict):
         lang = helpers.getLanguage()
         if lang:
             #  MULTILANG - Localizing resources dict
@@ -256,27 +258,31 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
 
         return resource_dict
 
-    def after_update(self, context, obj_dict):
-        otype = _find_obj_type(obj_dict)
+    def after_dataset_update(self, context, obj_dict):
         lang = helpers.getLanguage()
-        log.debug(f'Dispatching after_update for TYPE:{otype} LANG:{lang}')
+        log.debug(f'Dispatching after_dataset_update for LANG:{lang}')
+        if lang:
+            after_update_dataset(context, obj_dict, lang)
+
+    def after_resource_update(self, context, obj_dict):
+        lang = helpers.getLanguage()
+        log.debug(f'Dispatching after_resource_update for LANG:{lang}')
+        if lang:
+            after_update_resource(context, obj_dict, lang)
+
+    def after_dataset_create(self, context, obj_dict):
+        lang = helpers.getLanguage()
+        log.debug(f'Dispatching after_dataset_create for LANG:{lang}')
 
         if lang:
-            if otype == OBJ_TYPE.RESOURCE:
-                after_update_resource(context, obj_dict, lang)
-            elif otype == OBJ_TYPE.DATASET:
-                after_update_dataset(context, obj_dict, lang)
+            after_create_dataset(context, obj_dict, lang)
 
-    def after_create(self, context, obj_dict):
-        otype = _find_obj_type(obj_dict)
+    def after_resource_create(self, context, obj_dict):
         lang = helpers.getLanguage()
-        log.debug(f'Dispatching after_create for TYPE:{otype} LANG:{lang}')
+        log.debug(f'Dispatching after_resource_create for LANG:{lang}')
 
         if lang:
-            if otype == OBJ_TYPE.RESOURCE:
-                after_create_resource(context, obj_dict, lang)
-            elif otype == OBJ_TYPE.DATASET:
-                after_create_dataset(context, obj_dict, lang)
+            after_create_resource(context, obj_dict, lang)
 
 
 class MultilangResourcesPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
