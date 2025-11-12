@@ -1,6 +1,6 @@
 import logging
 
-from sqlalchemy import Column, ForeignKey, Table, types
+from sqlalchemy import Column, ForeignKey, Table, types, inspect
 
 from ckan.model import Session, meta
 from ckan.model.domain_object import DomainObject
@@ -54,24 +54,43 @@ def setup_db():
     # log.debug('Multilingual tables defined in memory')
     created = False
 
+    # Determine an Engine or Connection to bind existence checks and DDL
+    engine = getattr(meta, 'engine', None) or getattr(meta.metadata, 'bind', None) or Session.get_bind()
+
     for t in (package_multilang_table,
               group_multilang_table,
               resource_multilang_table,
               tag_multilang_table,
               ):
 
-        if t.exists():
+        # Use SQLAlchemy inspector to check table existence on the resolved engine
+        try:
+            has_table = inspect(engine).has_table(t.name)
+        except Exception:
+            # Fallback: if inspector fails for any reason, try metadata reflection
+            has_table = t.name in meta.metadata.tables
+
+        if has_table:
             log.debug(f'MultiLang: table {t.name} already exists')
         else:
             try:
                 log.info(f'MultiLang: creating table {t.name}')
-                t.create()
+                # bind explicit engine/connection when creating the table
+                t.create(bind=engine)
                 created = True
             except Exception as e:
                 # Make sure the table does not remain incorrectly created
-                if t.exists():
-                    Session.execute(f'DROP TABLE {t.name}')
-                    Session.commit()
+                try:
+                    if inspect(engine).has_table(t.name):
+                        try:
+                            t.drop(bind=engine)
+                        except Exception:
+                            # best-effort fallback to Session.execute
+                            Session.execute(f'DROP TABLE {t.name}')
+                            Session.commit()
+                except Exception:
+                    # ignore cleanup errors, re-raise original
+                    pass
                 raise e
 
     return created

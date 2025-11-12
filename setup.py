@@ -64,9 +64,10 @@ setup(
     # project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/technical.html#install-requires-vs-requirements-files
-    install_requires=[
-        'ckan>=2.9',
-    ],
+    # Uncomment the following three lines if CKAN isn't isntalled in your system
+    #install_requires=[
+    #    'ckan>=2.9',
+    #],
     python_requires=">=3.7",
 
     # If there are data files included in your packages that need to be
