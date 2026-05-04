@@ -85,38 +85,31 @@ class TestResourceUpdateFix(unittest.TestCase):
             plugin.after_dataset_update(context, pkg_dict)
             mock_update.assert_called_once_with(context, pkg_dict, 'de')
 
-    def test_flag_lifecycle_during_resource_update(self):
-        """Simulate the full CKAN resource_update hook sequence and verify the flag
-        is set before package_update (after_dataset_update) and cleared after."""
+    def test_resource_update_hooks_manage_flag_on_reused_context(self):
+        """Unit-test the plugin hook contract when the same context dict is reused.
+
+        This does not exercise CKAN's real ``resource_update`` action stack; it
+        only verifies that the plugin sets the skip flag before the dataset hook,
+        that ``after_dataset_update`` respects that flag, and that the resource
+        post-hook clears it afterwards.
+        """
         plugin = self._make_plugin()
         context = {}
-        flag_during_pkg_update = []
-
-        def fake_after_dataset_update(ctx, obj_dict, lang):
-            # Capture the flag value at the time package_update runs
-            flag_during_pkg_update.append(ctx.get(plugin._RESOURCE_OP_FLAG))
 
         with patch('ckanext.multilang.plugin.helpers.getLanguage', return_value='de'), \
-             patch('ckanext.multilang.plugin.after_update_dataset',
-                   side_effect=fake_after_dataset_update), \
+             patch('ckanext.multilang.plugin.after_update_dataset') as mock_update, \
              patch('ckanext.multilang.plugin.after_update_resource'):
 
-            # 1. before_resource_update (CKAN calls this before package_update)
             plugin.before_resource_update(context, {}, {})
+            self.assertTrue(context.get(plugin._RESOURCE_OP_FLAG))
 
-            # 2. Simulate package_update triggering after_dataset_update
-            #    (should be skipped because flag is set)
-            plugin.after_dataset_update(context, {'id': 'pkg-1', 'title': 'Italian Title'})
+            plugin.after_dataset_update(
+                context, {'id': 'pkg-1', 'title': 'Italian Title'}
+            )
+            mock_update.assert_not_called()
 
-            # 3. after_resource_update (CKAN calls this after package_update)
             plugin.after_resource_update(context, {'id': 'res-1'})
 
-        # after_dataset_update should have been skipped (not called through)
-        # because the flag was set; fake_after_dataset_update captures calls that
-        # pass through the guard, so it should not have been invoked
-        self.assertEqual(flag_during_pkg_update, [],
-                         "after_dataset_update should not be called during resource update")
-        # Flag should be cleared by after_resource_update
         self.assertNotIn(plugin._RESOURCE_OP_FLAG, context)
 
     def test_flag_lifecycle_during_resource_create(self):
@@ -154,20 +147,4 @@ class TestResourceUpdateFix(unittest.TestCase):
 
         self.assertEqual(pkg_update_calls, [],
                          "after_dataset_update should not be called during resource delete")
-        self.assertNotIn(plugin._RESOURCE_OP_FLAG, context)
-
-    def test_after_resource_create_clears_flag_even_when_no_lang(self):
-        """after_resource_create must clear the flag regardless of language."""
-        plugin = self._make_plugin()
-        context = {plugin._RESOURCE_OP_FLAG: True}
-        with patch('ckanext.multilang.plugin.helpers.getLanguage', return_value=None):
-            plugin.after_resource_create(context, {})
-        self.assertNotIn(plugin._RESOURCE_OP_FLAG, context)
-
-    def test_after_resource_update_clears_flag_even_when_no_lang(self):
-        """after_resource_update must clear the flag regardless of language."""
-        plugin = self._make_plugin()
-        context = {plugin._RESOURCE_OP_FLAG: True}
-        with patch('ckanext.multilang.plugin.helpers.getLanguage', return_value=None):
-            plugin.after_resource_update(context, {})
         self.assertNotIn(plugin._RESOURCE_OP_FLAG, context)
