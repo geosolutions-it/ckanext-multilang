@@ -258,17 +258,38 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
 
         return resource_dict
 
+    # Flag key used to mark that a resource-level operation is in progress so
+    # that after_dataset_update can avoid overwriting package multilang entries
+    # with stale core-table data.
+    _RESOURCE_OP_FLAG = '__multilang_skip_pkg_update'
+
+    def before_resource_create(self, context, resource):
+        context[self._RESOURCE_OP_FLAG] = True
+
+    def before_resource_update(self, context, current, resource):
+        context[self._RESOURCE_OP_FLAG] = True
+
+    def before_resource_delete(self, context, resource, resources):
+        context[self._RESOURCE_OP_FLAG] = True
+
     def after_dataset_update(self, context, obj_dict):
+        if context.get(self._RESOURCE_OP_FLAG):
+            log.debug('Skipping package multilang update: triggered by a resource operation')
+            return
         lang = helpers.getLanguage()
         log.debug(f'Dispatching after_dataset_update for LANG:{lang}')
         if lang:
             after_update_dataset(context, obj_dict, lang)
 
     def after_resource_update(self, context, obj_dict):
+        context.pop(self._RESOURCE_OP_FLAG, None)
         lang = helpers.getLanguage()
         log.debug(f'Dispatching after_resource_update for LANG:{lang}')
         if lang:
             after_update_resource(context, obj_dict, lang)
+
+    def after_resource_delete(self, context, resources):
+        context.pop(self._RESOURCE_OP_FLAG, None)
 
     def after_dataset_create(self, context, obj_dict):
         lang = helpers.getLanguage()
@@ -278,6 +299,7 @@ class MultilangPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
             after_create_dataset(context, obj_dict, lang)
 
     def after_resource_create(self, context, obj_dict):
+        context.pop(self._RESOURCE_OP_FLAG, None)
         lang = helpers.getLanguage()
         log.debug(f'Dispatching after_resource_create for LANG:{lang}')
 
