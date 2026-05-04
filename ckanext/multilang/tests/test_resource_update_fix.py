@@ -115,7 +115,7 @@ class TestResourceUpdateFix(unittest.TestCase):
         # because the flag was set; fake_after_dataset_update captures calls that
         # pass through the guard, so it should not have been invoked
         self.assertEqual(flag_during_pkg_update, [],
-                         "after_update_dataset should not be called during resource update")
+                         "after_dataset_update should not be called during resource update")
         # Flag should be cleared by after_resource_update
         self.assertNotIn(plugin._RESOURCE_OP_FLAG, context)
 
@@ -135,7 +135,7 @@ class TestResourceUpdateFix(unittest.TestCase):
             plugin.after_resource_create(context, {'id': 'res-1'})
 
         self.assertEqual(pkg_update_calls, [],
-                         "after_update_dataset should not be called during resource create")
+                         "after_dataset_update should not be called during resource create")
         self.assertNotIn(plugin._RESOURCE_OP_FLAG, context)
 
     def test_flag_lifecycle_during_resource_delete(self):
@@ -153,7 +153,7 @@ class TestResourceUpdateFix(unittest.TestCase):
             plugin.after_resource_delete(context, [])
 
         self.assertEqual(pkg_update_calls, [],
-                         "after_update_dataset should not be called during resource delete")
+                         "after_dataset_update should not be called during resource delete")
         self.assertNotIn(plugin._RESOURCE_OP_FLAG, context)
 
     def test_after_resource_create_clears_flag_even_when_no_lang(self):
